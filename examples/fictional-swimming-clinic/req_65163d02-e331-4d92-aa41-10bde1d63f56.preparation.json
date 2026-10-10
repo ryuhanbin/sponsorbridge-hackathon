@@ -1,0 +1,227 @@
+{
+  "requestId": "req_65163d02-e331-4d92-aa41-10bde1d63f56",
+  "actor": "WorkBuddy via local adapter",
+  "recordedAt": "2026-10-10T07:45:50.845Z",
+  "content": {
+    "facts": [
+      {
+        "field": "eventName",
+        "value": "First Splash Swimming Clinic",
+        "sources": [
+          {
+            "source": "proposal",
+            "quote": "The fictional Blue Lane student group proposes First Splash Swimming Clinic for beginner university students."
+          }
+        ]
+      },
+      {
+        "field": "organiser",
+        "value": "Blue Lane (fictional student group)",
+        "sources": [
+          {
+            "source": "proposal",
+            "quote": "The fictional Blue Lane student group proposes First Splash Swimming Clinic for beginner university students."
+          }
+        ]
+      },
+      {
+        "field": "purpose",
+        "value": "Build water confidence and introduce basic swimming techniques.",
+        "sources": [
+          {
+            "source": "proposal",
+            "quote": "The purpose is to build water confidence and introduce basic swimming techniques."
+          }
+        ]
+      },
+      {
+        "field": "activities",
+        "value": "Water-confidence drills and supervised basic stroke practice (planned).",
+        "sources": [
+          {
+            "source": "proposal",
+            "quote": "Planned activities are water-confidence drills and supervised basic stroke practice."
+          }
+        ]
+      },
+      {
+        "field": "audience",
+        "value": "Beginner university students.",
+        "sources": [
+          {
+            "source": "proposal",
+            "quote": "The fictional Blue Lane student group proposes First Splash Swimming Clinic for beginner university students."
+          }
+        ]
+      },
+      {
+        "field": "date",
+        "value": "",
+        "sources": []
+      },
+      {
+        "field": "venue",
+        "value": "",
+        "sources": []
+      },
+      {
+        "field": "attendance",
+        "value": "",
+        "sources": []
+      },
+      {
+        "field": "budget",
+        "value": "",
+        "sources": []
+      },
+      {
+        "field": "currency",
+        "value": "",
+        "sources": []
+      },
+      {
+        "field": "supportNeeds",
+        "value": "Bottled water, loaned kickboards and qualified swimming-coach time (requested, not secured).",
+        "sources": [
+          {
+            "source": "proposal",
+            "quote": "Requested support is bottled drinking water, loaned kickboards and a qualified swimming coach's time."
+          }
+        ]
+      },
+      {
+        "field": "supportQuantities",
+        "value": "",
+        "sources": []
+      },
+      {
+        "field": "sponsorshipBenefits",
+        "value": "",
+        "sources": []
+      },
+      {
+        "field": "approvals",
+        "value": "",
+        "sources": []
+      },
+      {
+        "field": "taxEligibility",
+        "value": "",
+        "sources": []
+      }
+    ],
+    "summary": [
+      {
+        "text": "Fictional clinic only, not a real or approved UPM event.",
+        "sources": [
+          {
+            "source": "proposal",
+            "quote": "FICTIONAL SWIMMING-CLINIC DEMO ONLY — not a real UPM event and not approved by UPM."
+          }
+        ]
+      },
+      {
+        "text": "Blue Lane proposes a beginner swimming clinic focused on water confidence and basic techniques.",
+        "sources": [
+          {
+            "source": "proposal",
+            "quote": "The fictional Blue Lane student group proposes First Splash Swimming Clinic for beginner university students.\nThe purpose is to build water confidence and introduce basic swimming techniques."
+          }
+        ]
+      },
+      {
+        "text": "Requested in-kind support is water, kickboard loans and qualified coaching time; no cash sponsorship is requested.",
+        "sources": [
+          {
+            "source": "proposal",
+            "quote": "Requested support is bottled drinking water, loaned kickboards and a qualified swimming coach's time."
+          },
+          {
+            "source": "goal",
+            "quote": "No cash sponsorship is requested."
+          }
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "id": "q-date",
+        "field": "date",
+        "question": "What date/time is proposed and when is each contribution needed or to be confirmed?",
+        "reason": "Draft realistic delivery and availability deadlines."
+      },
+      {
+        "id": "q-venue",
+        "field": "venue",
+        "question": "Which pool is proposed, and is access/reservation confirmed?",
+        "reason": "Keep venue uncertainty visible without claiming access."
+      },
+      {
+        "id": "q-attendance",
+        "field": "attendance",
+        "question": "What participant planning figure is supplied, and is it an estimate or registration count?",
+        "reason": "Clarify scale without inventing attendance."
+      },
+      {
+        "id": "q-water",
+        "field": "supportQuantities",
+        "question": "How many water bottles, and what size, are requested?",
+        "reason": "Make the hydration contribution concrete."
+      },
+      {
+        "id": "q-boards",
+        "field": "supportQuantities",
+        "question": "How many kickboards, for what loan period, and what return arrangements are proposed?",
+        "reason": "Prepare a separate equipment-loan draft."
+      },
+      {
+        "id": "q-coach",
+        "field": "supportQuantities",
+        "question": "How many qualified coaches and how much time are requested; what safety checks remain?",
+        "reason": "Define coaching contribution while keeping safety/qualification conditions visible."
+      },
+      {
+        "id": "q-benefits",
+        "field": "sponsorshipBenefits",
+        "question": "Which student-team benefits are authorised? Explicitly exclude unapproved rights.",
+        "reason": "Benefits must come from organiser answers, not tier templates."
+      },
+      {
+        "id": "q-approvals",
+        "field": "approvals",
+        "question": "What permissions or approvals are confirmed? Not confirmed yet is acceptable for a draft.",
+        "reason": "Retain outstanding permissions, not an approval prerequisite for drafting."
+      }
+    ],
+    "checklist": [
+      {
+        "id": "c-needs",
+        "task": "Confirm quantities and timing for the three in-kind needs.",
+        "status": "not_started",
+        "dependsOnFields": [
+          "supportQuantities",
+          "date"
+        ]
+      },
+      {
+        "id": "c-safety",
+        "task": "Keep pool, qualification and safety permissions outstanding until confirmed before delivery or activity.",
+        "status": "not_started",
+        "dependsOnFields": [
+          "venue",
+          "approvals"
+        ]
+      },
+      {
+        "id": "c-review",
+        "task": "After answers, review separate hydration, equipment-loan and coaching drafts; no commitment or outreach.",
+        "status": "not_started",
+        "dependsOnFields": [
+          "supportQuantities",
+          "sponsorshipBenefits"
+        ]
+      }
+    ]
+  },
+  "planRecordedAt": "2026-10-10T07:45:26.831Z"
+}

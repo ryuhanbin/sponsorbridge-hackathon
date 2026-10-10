@@ -1,0 +1,14 @@
+/data/
+/test/.temporary/
+node_modules/
+.agent-key
+**/.agent-key
+*.pending
+.env
+.env.*
+!.env.example
+.workbuddy-ai/
+.playwright-cli/
+*.log
+.DS_Store
+Thumbs.db

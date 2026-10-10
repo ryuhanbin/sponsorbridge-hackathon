@@ -1,0 +1,234 @@
+{
+  "packages": [
+    {
+      "content": {
+        "id": "pkg_water",
+        "title": "Hydration Partner — student-edited draft",
+        "contributionType": "products",
+        "items": [
+          {
+            "description": "Sealed 500 ml drinking-water bottles (requested donation, not secured)",
+            "quantity": "48 bottles for 24 planned participants",
+            "sources": [
+              {
+                "source": "answer",
+                "questionId": "q-water",
+                "revision": 1,
+                "quote": "Request 48 sealed 500 ml drinking-water bottles for the 24 planned participants."
+              },
+              {
+                "source": "answer",
+                "questionId": "q-attendance",
+                "revision": 1,
+                "quote": "Planning assumption supplied by the student team: 24 beginner student participants; not an actual registration count."
+              }
+            ]
+          }
+        ],
+        "amount": {
+          "value": "",
+          "sources": []
+        },
+        "currency": {
+          "value": "",
+          "sources": []
+        },
+        "deadline": {
+          "value": "Proposed confirmation by 5 November 2026; delivery by 08:30 on 7 November 2026.",
+          "sources": [
+            {
+              "source": "answer",
+              "questionId": "q-date",
+              "revision": 1,
+              "quote": "Water and kickboard arrangements should be confirmed by 5 November 2026; delivery by 08:30 on 7 November. Coach availability should be confirmed by 5 November."
+            },
+            {
+              "source": "answer",
+              "questionId": "q-date",
+              "revision": 1,
+              "quote": "The proposed clinic is 7 November 2026, 09:00-12:00."
+            }
+          ]
+        },
+        "benefits": [
+          {
+            "text": "Draft benefit limited to a written thank-you from the student organising team; no university endorsement or additional rights.",
+            "sources": [
+              {
+                "source": "answer",
+                "questionId": "q-benefits",
+                "revision": 1,
+                "quote": "Only a written thank-you message from the student organising team is authorised. No logo placement, naming rights, exclusivity, campus access or university endorsement is authorised."
+              }
+            ]
+          }
+        ],
+        "outstanding": [
+          "FICTIONAL DEMO draft only; not UPM approval, sponsor acceptance, an agreement or tax eligibility.",
+          "Proposed date and planning headcount are not a confirmed booking or registration count.",
+          "Pool reservation, access and required event permissions remain unconfirmed; no campus access is offered.",
+          "No logos, naming rights, exclusivity or university endorsement may be promised.",
+          "Availability, acceptance and authorised delivery/handover must be confirmed; no price or cash alternative supplied."
+        ],
+        "draftStatus": "draft"
+      },
+      "review": null
+    },
+    {
+      "content": {
+        "id": "pkg_boards",
+        "title": "Kickboard Loan Partner — fictional draft",
+        "contributionType": "products",
+        "items": [
+          {
+            "description": "Temporary loan of kickboards; not a donation or an accepted loan",
+            "quantity": "12 kickboards, 7 November 2026 09:00-12:00; proposed same-day return 12:30",
+            "sources": [
+              {
+                "source": "answer",
+                "questionId": "q-boards",
+                "revision": 1,
+                "quote": "Request a loan of 12 kickboards for 7 November 2026, 09:00-12:00; proposed return at 12:30 the same day. Loan, transport and damage responsibility are not confirmed."
+              }
+            ]
+          }
+        ],
+        "amount": {
+          "value": "",
+          "sources": []
+        },
+        "currency": {
+          "value": "",
+          "sources": []
+        },
+        "deadline": {
+          "value": "Proposed confirmation by 5 November 2026; delivery by 08:30 on 7 November; proposed return 12:30 that day.",
+          "sources": [
+            {
+              "source": "answer",
+              "questionId": "q-date",
+              "revision": 1,
+              "quote": "Water and kickboard arrangements should be confirmed by 5 November 2026; delivery by 08:30 on 7 November. Coach availability should be confirmed by 5 November."
+            },
+            {
+              "source": "answer",
+              "questionId": "q-boards",
+              "revision": 1,
+              "quote": "Request a loan of 12 kickboards for 7 November 2026, 09:00-12:00; proposed return at 12:30 the same day. Loan, transport and damage responsibility are not confirmed."
+            }
+          ]
+        },
+        "benefits": [
+          {
+            "text": "Draft benefit limited to a written thank-you from the student organising team; no university endorsement or additional rights.",
+            "sources": [
+              {
+                "source": "answer",
+                "questionId": "q-benefits",
+                "revision": 1,
+                "quote": "Only a written thank-you message from the student organising team is authorised. No logo placement, naming rights, exclusivity, campus access or university endorsement is authorised."
+              }
+            ]
+          }
+        ],
+        "outstanding": [
+          "FICTIONAL DEMO draft only; not UPM approval, sponsor acceptance, an agreement or tax eligibility.",
+          "Proposed date and planning headcount are not a confirmed booking or registration count.",
+          "Pool reservation, access and required event permissions remain unconfirmed; no campus access is offered.",
+          "No logos, naming rights, exclusivity or university endorsement may be promised.",
+          "Loan availability/acceptance, transport, handover, return and damage responsibility remain unconfirmed; no invented loan terms or deposit."
+        ],
+        "draftStatus": "draft"
+      },
+      "review": null
+    },
+    {
+      "content": {
+        "id": "pkg_coach",
+        "title": "Swimming Coach Partner — fictional draft",
+        "contributionType": "services",
+        "items": [
+          {
+            "description": "Qualified swimming-coach time (requested in-kind service, not accepted)",
+            "quantity": "One coach for three hours, 09:00-12:00 on proposed 7 November 2026",
+            "sources": [
+              {
+                "source": "answer",
+                "questionId": "q-coach",
+                "revision": 1,
+                "quote": "Request one qualified swimming coach for the three-hour clinic, 09:00-12:00 on 7 November. Qualification checks, safety supervision and acceptance remain to be confirmed."
+              },
+              {
+                "source": "answer",
+                "questionId": "q-date",
+                "revision": 1,
+                "quote": "The proposed clinic is 7 November 2026, 09:00-12:00."
+              }
+            ]
+          }
+        ],
+        "amount": {
+          "value": "",
+          "sources": []
+        },
+        "currency": {
+          "value": "",
+          "sources": []
+        },
+        "deadline": {
+          "value": "Proposed availability confirmation by 5 November 2026; service 09:00-12:00 on 7 November 2026.",
+          "sources": [
+            {
+              "source": "answer",
+              "questionId": "q-date",
+              "revision": 1,
+              "quote": "Water and kickboard arrangements should be confirmed by 5 November 2026; delivery by 08:30 on 7 November. Coach availability should be confirmed by 5 November."
+            },
+            {
+              "source": "answer",
+              "questionId": "q-coach",
+              "revision": 1,
+              "quote": "Request one qualified swimming coach for the three-hour clinic, 09:00-12:00 on 7 November. Qualification checks, safety supervision and acceptance remain to be confirmed."
+            },
+            {
+              "source": "answer",
+              "questionId": "q-date",
+              "revision": 1,
+              "quote": "The proposed clinic is 7 November 2026, 09:00-12:00."
+            }
+          ]
+        },
+        "benefits": [
+          {
+            "text": "Draft benefit limited to a written thank-you from the student organising team; no university endorsement or additional rights.",
+            "sources": [
+              {
+                "source": "answer",
+                "questionId": "q-benefits",
+                "revision": 1,
+                "quote": "Only a written thank-you message from the student organising team is authorised. No logo placement, naming rights, exclusivity, campus access or university endorsement is authorised."
+              }
+            ]
+          }
+        ],
+        "outstanding": [
+          "FICTIONAL DEMO draft only; not UPM approval, sponsor acceptance, an agreement or tax eligibility.",
+          "Proposed date and planning headcount are not a confirmed booking or registration count.",
+          "Pool reservation, access and required event permissions remain unconfirmed; no campus access is offered.",
+          "No logos, naming rights, exclusivity or university endorsement may be promised.",
+          "Coach qualification checks, availability, acceptance and safety supervision remain unconfirmed. The requested count is not a verified safe supervision ratio."
+        ],
+        "draftStatus": "draft"
+      },
+      "review": null
+    }
+  ],
+  "answerRevision": 1,
+  "continuationRevision": 1,
+  "action": "edit",
+  "packageId": "pkg_water",
+  "actor": "Student via browser",
+  "requestId": "req_65163d02-e331-4d92-aa41-10bde1d63f56",
+  "revision": 2,
+  "recordedAt": "2026-10-10T07:59:35.905Z"
+}

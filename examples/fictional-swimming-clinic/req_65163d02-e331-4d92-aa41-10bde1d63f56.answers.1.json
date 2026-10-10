@@ -1,0 +1,48 @@
+{
+  "entries": [
+    {
+      "questionId": "q-date",
+      "state": "confirmed",
+      "value": "FICTIONAL ANSWER: The proposed clinic is 7 November 2026, 09:00-12:00. Water and kickboard arrangements should be confirmed by 5 November 2026; delivery by 08:30 on 7 November. Coach availability should be confirmed by 5 November."
+    },
+    {
+      "questionId": "q-venue",
+      "state": "confirmed",
+      "value": "FICTIONAL ANSWER: Proposed venue is Demo Training Pool. Reservation and pool access are not confirmed. Do not promise access or represent the venue as booked."
+    },
+    {
+      "questionId": "q-attendance",
+      "state": "confirmed",
+      "value": "FICTIONAL ANSWER: Planning assumption supplied by the student team: 24 beginner student participants; not an actual registration count."
+    },
+    {
+      "questionId": "q-water",
+      "state": "confirmed",
+      "value": "FICTIONAL ANSWER: Request 48 sealed 500 ml drinking-water bottles for the 24 planned participants. No price or cash alternative is supplied."
+    },
+    {
+      "questionId": "q-boards",
+      "state": "confirmed",
+      "value": "FICTIONAL ANSWER: Request a loan of 12 kickboards for 7 November 2026, 09:00-12:00; proposed return at 12:30 the same day. Loan, transport and damage responsibility are not confirmed."
+    },
+    {
+      "questionId": "q-coach",
+      "state": "confirmed",
+      "value": "FICTIONAL ANSWER: Request one qualified swimming coach for the three-hour clinic, 09:00-12:00 on 7 November. Qualification checks, safety supervision and acceptance remain to be confirmed."
+    },
+    {
+      "questionId": "q-benefits",
+      "state": "confirmed",
+      "value": "FICTIONAL ANSWER: Only a written thank-you message from the student organising team is authorised. No logo placement, naming rights, exclusivity, campus access or university endorsement is authorised."
+    },
+    {
+      "questionId": "q-approvals",
+      "state": "not_confirmed",
+      "value": ""
+    }
+  ],
+  "actor": "Student via browser",
+  "requestId": "req_65163d02-e331-4d92-aa41-10bde1d63f56",
+  "revision": 1,
+  "recordedAt": "2026-10-10T07:48:59.701Z"
+}
