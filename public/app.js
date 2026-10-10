@@ -3,6 +3,7 @@ const ID_PATTERN = /^req_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-
 const NODE = 'node';
 const WORKSPACE = 'the app directory containing adapter.mjs (open sponsorbridge/ if it is inside the selected workspace)';
 let browserToken, timer, currentRequest, answersRenderedKey = '', answersDirty = false, packageRenderedKey = '', preparationRenderedKey = '';
+let modelConnected = false, modelRun = null;
 let nextView = 'activity', networkError = '';
 const VIEW_NAMES = {overview: 'Overview', clarifications: 'Clarifications', packages: 'Packages', activity: 'Activity & handoff'};
 const FIELD_LABELS = {eventName: 'Event name', organiser: 'Organiser', purpose: 'Purpose', activities: 'Activities', audience: 'Audience', date: 'Date & time', venue: 'Venue', attendance: 'Expected attendance', budget: 'Budget', currency: 'Currency', supportNeeds: 'Support needed', supportQuantities: 'Support quantities', sponsorshipBenefits: 'Sponsor benefits', approvals: 'Permissions & approvals', taxEligibility: 'Tax eligibility'};
@@ -33,7 +34,7 @@ function render(request) {
   $('saved-goal').textContent = request.goal;
   $('instruction').value = instruction(request.id);
   const ack = request.acknowledgement;
-  $('status').textContent = request.status === 'answers_saved' ? 'Answers saved — resume WorkBuddy manually' : request.status === 'packages_drafted' ? 'Package drafts saved — content review' : request.preparation ? 'Preparation saved — review needed' : request.plan ? 'Task plan saved' : ack ? 'Acknowledgement recorded' : 'Waiting for WorkBuddy';
+  $('status').textContent = request.status === 'answers_saved' ? 'Answers saved — AI can draft cards' : request.status === 'packages_drafted' ? 'Package drafts saved — content review' : request.preparation ? 'Preparation saved — review needed' : request.plan ? 'Task plan saved' : ack ? 'Acknowledgement recorded' : 'Waiting for preparation';
   $('status').classList.toggle('acknowledged', Boolean(ack || request.plan || request.preparation));
   $('acknowledgement').hidden = !ack;
   $('waiting-note').hidden = Boolean(ack);
@@ -45,6 +46,7 @@ function render(request) {
   }
   renderPreparation(request);
   renderAnswers(request); renderPackages(request); renderWorkspace(request);
+  renderModelPanel();
 }
 function setView(view, focus = false) {
   if (!VIEW_NAMES[view]) view = 'overview';
@@ -88,9 +90,9 @@ function renderWorkspace(request) {
   const reviewed = request.packages?.filter((pkg) => pkg.reviewCurrent).length ?? 0;
   $('review-count').textContent = `${reviewed} / ${packages} CONTENT REVIEWED`;
   if (request.continuationStale || request.status === 'answers_saved') {
-    title = 'Your answers are saved. Resume WorkBuddy.';
-    description = 'Copy the instruction to interpret the latest answers and prepare current drafts. Nothing resumes automatically.';
-    action = 'Open resume instruction'; nextView = 'activity';
+    title = 'Your answers are saved. Draft cards next.';
+    description = 'Start a connected CodeBuddy run here, or copy the instruction into WorkBuddy. Saving answers alone does not start either agent.';
+    action = 'Open AI options'; nextView = 'activity';
   } else if (request.continuation && packages) {
     title = reviewed === packages ? 'Content reviewed. Permissions still matter.' : `Review your ${packages} package ${packages === 1 ? 'draft' : 'drafts'}`;
     description = `${reviewed} of ${packages} content reviewed. Confirm the request, supported benefits, and outstanding permissions. Review is not approval.`;
@@ -102,9 +104,9 @@ function renderWorkspace(request) {
     title = 'Help fill in the important details.'; description = 'Review the event summary, then answer what you know. Leave unconfirmed information empty.';
     action = 'View clarifications'; nextView = 'clarifications';
   } else {
-    title = request.plan ? 'A plan is recorded. Continue in WorkBuddy.' : 'Your request is saved. Start WorkBuddy.';
-    description = 'Copy the instruction into WorkBuddy with this workspace selected. Saving does not start an agent.';
-    action = 'Open handoff'; nextView = 'activity';
+    title = request.plan ? 'A plan is recorded. Prepare the event.' : 'Your request is saved. Prepare the event.';
+    description = 'Connect a CodeBuddy API key for one automatic draft, or copy the instruction into WorkBuddy.';
+    action = 'Open AI options'; nextView = 'activity';
   }
   $('next-title').textContent = title; $('next-description').textContent = description;
   $('next-action').replaceChildren(document.createTextNode(action), node('span', '→'));
@@ -169,7 +171,7 @@ function renderPreparation(request) {
 function renderAnswers(request) {
   $('answers-panel').hidden = !request.preparation;
   if (!request.preparation) return;
-  $('answer-meta').textContent = `Saved answer revision ${request.answerRevision}. ${answersDirty ? 'Unsaved changes retained; reload before overwriting a newer revision.' : 'Submitting saves only; explicit WorkBuddy resume required.'}`;
+  $('answer-meta').textContent = `Saved answer revision ${request.answerRevision}. ${answersDirty ? 'Unsaved changes retained; reload before overwriting a newer revision.' : 'Saving answers does not start AI; open Activity to choose a run.'}`;
   const key = `${request.id}:${request.answerRevision}`;
   if (answersRenderedKey === key || answersDirty) return;
   answersRenderedKey = key;
@@ -198,13 +200,13 @@ async function browserPost(suffix, content) {
 function renderPackages(request) {
   $('packages-panel').hidden = !request.continuation;
   if (!request.continuation) return;
-  $('package-meta').textContent = `WorkBuddy result saved ${new Date(request.continuation.recordedAt).toLocaleString()} · Answer revision ${request.continuation.content.answerRevision} · Package revision ${request.packageRevision}`;
-  $('package-sync').textContent = request.continuationStale ? 'Answers changed · refresh drafts in WorkBuddy' : 'Cards update automatically from saved results';
+  $('package-meta').textContent = `${request.continuation.actor} result saved ${new Date(request.continuation.recordedAt).toLocaleString()} · Answer revision ${request.continuation.content.answerRevision} · Package revision ${request.packageRevision}`;
+  $('package-sync').textContent = request.continuationStale ? 'Answers changed · refresh drafts with AI or WorkBuddy' : 'Cards update automatically from saved results';
   $('package-sync').classList.toggle('is-stale', request.continuationStale);
   $('package-list').classList.toggle('is-stale', request.continuationStale);
   const key = `${request.id}:${request.continuationRevision}:${request.packageRevision}:${request.answerRevision}`;
   if (packageRenderedKey === key) return;
-  if (packageRenderedKey) $('package-announcement').textContent = request.continuationStale ? 'Answers changed. These package drafts need a WorkBuddy refresh before review.' : `${request.packages.length} package cards updated from saved results.`;
+  if (packageRenderedKey) $('package-announcement').textContent = request.continuationStale ? 'Answers changed. These package drafts need a new AI or WorkBuddy result before review.' : `${request.packages.length} package cards updated from saved results.`;
   packageRenderedKey = key; $('package-list').replaceChildren(); $('resolutions').replaceChildren();
   for (const r of request.continuation.content.resolutions) $('resolutions').append(node('li', `${r.questionId}: ${r.status.replaceAll('_',' ')} — ${r.reason}`));
   if (!request.packages.length) $('package-list').append(node('p', 'No feasible package drafted yet. Review remaining blockers.'));
@@ -258,12 +260,14 @@ $('answers-form').addEventListener('submit', async (e) => {
   e.preventDefault(); showError('');
   const expectedRevision=Number(answersRenderedKey.split(':').at(-1));
   const entries=[...$('answer-fields').children].map((row)=>({questionId:row.dataset.questionId,state:row.querySelector('select').value,value:row.querySelector('select').value==='confirmed'?row.querySelector('textarea').value:''}));
-  try { const r=await browserPost('answers',{expectedRevision,entries});answersDirty=false;answersRenderedKey='';render(r);$('answer-feedback').textContent='Answers saved. Copy the resume instruction into WorkBuddy; no agent was restarted.';} catch(err){showError(err.message);}
+  try { const r=await browserPost('answers',{expectedRevision,entries});answersDirty=false;answersRenderedKey='';render(r);$('answer-feedback').textContent='Answers saved. Open Activity to start a CodeBuddy run or continue manually in WorkBuddy.';} catch(err){showError(err.message);}
 });
 async function observe(id) {
   clearTimeout(timer);
   try {
     const request = await api(`/api/requests/${id}`);
+    const model = await api(`/api/model/status?id=${encodeURIComponent(id)}`);
+    modelConnected = model.connected; modelRun = model.run;
     render(request);
     if (networkError && $('error').textContent === networkError) showError('');
     networkError = '';
@@ -274,6 +278,40 @@ async function observe(id) {
   }
   // This timer only retrieves server state. It never creates an acknowledgement.
   timer = setTimeout(() => observe(id), 2000);
+}
+function setupModelPanel() {
+  const panel = document.createElement('article');
+  panel.id = 'model-panel'; panel.className = 'panel model-panel';
+  panel.innerHTML = `<div class="card-heading"><div><p class="eyebrow">OPTIONAL AUTOMATIC DRAFT</p><h2>Use your CodeBuddy API key</h2></div><span class="subtle-badge">LOCAL CONNECTION</span></div><p class="hint">CodeBuddy CLI can read this saved request and prepare a draft here. It is a separate model route from the WorkBuddy desktop assistant. One click starts one credit-using run; results appear only after the app validates and saves them.</p><form id="model-connect-form"><label for="model-key">Platform API key</label><div class="model-connection-row"><input id="model-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste key here on this computer" required><button type="submit">Connect key</button></div><p class="hint">The key stays in this local server's memory until it restarts or you disconnect. It is never added to the public repository.</p></form><div class="button-row"><button id="model-start" type="button" disabled>Run AI for this request</button><button id="model-disconnect" class="secondary-button" type="button" hidden>Disconnect key</button></div><p id="model-status" class="hint" role="status">Checking connection…</p>`;
+  $('view-activity').prepend(panel);
+  $('model-connect-form').addEventListener('submit', async (event) => {
+    event.preventDefault(); showError('');
+    const input = $('model-key');
+    try { await modelPost('/api/model/connect', { key: input.value }); input.value = ''; modelConnected = true; renderModelPanel(); }
+    catch (error) { input.value = ''; showError(error.message); }
+  });
+  $('model-disconnect').addEventListener('click', async () => {
+    showError(''); try { await modelPost('/api/model/disconnect', {}); modelConnected = false; renderModelPanel(); } catch (error) { showError(error.message); }
+  });
+  $('model-start').addEventListener('click', async () => {
+    showError(''); $('model-start').disabled = true;
+    try { modelRun = await modelPost('/api/model/start', { id: currentRequest.id }); renderModelPanel(); }
+    catch (error) { showError(error.message); renderModelPanel(); }
+  });
+}
+async function modelPost(path, body) {
+  browserToken ??= (await api('/api/session')).token;
+  return api(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Browser-Token': browserToken }, body: JSON.stringify(body) });
+}
+function renderModelPanel() {
+  if (!currentRequest || !$('model-panel')) return;
+  const ready = !currentRequest.preparation || (currentRequest.answerRevision > 0 && (!currentRequest.continuation || currentRequest.continuationStale));
+  $('model-connect-form').hidden = modelConnected;
+  $('model-disconnect').hidden = !modelConnected;
+  $('model-disconnect').disabled = modelRun?.state === 'running';
+  $('model-start').disabled = !modelConnected || !ready || modelRun?.state === 'running';
+  $('model-start').textContent = !currentRequest.preparation ? 'Prepare event with AI' : 'Draft sponsorship cards with AI';
+  $('model-status').textContent = modelRun?.state === 'running' ? `Running: ${modelRun.message}. This can take a few minutes.` : modelRun?.state === 'failed' ? `Last run failed: ${modelRun.message}` : modelRun?.state === 'completed' ? `Last run completed: ${modelRun.message}` : !modelConnected ? 'Connect your key to enable this option.' : ready ? 'Key held locally. API access will be checked when you start a run.' : 'Key held locally. Answer the clarification questions to draft cards, or review the saved result.';
 }
 $('request-form').addEventListener('submit', async (event) => {
   event.preventDefault(); showError('');
@@ -319,6 +357,7 @@ window.addEventListener('beforeunload', (event) => {
   if (answersDirty || packageEdits.size || (!$('intake').hidden && ($('proposal').value || $('goal').value) && !$('save').disabled)) { event.preventDefault(); event.returnValue = ''; }
 });
 if (location.pathname.startsWith('/requests/')) {
+  setupModelPanel();
   $('workspace-nav').hidden = false;
   document.querySelector('.new-request-link').classList.remove('is-active');
   document.querySelector('.new-request-link').removeAttribute('aria-current');

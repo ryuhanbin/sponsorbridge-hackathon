@@ -265,3 +265,12 @@ textarea { font-size: 14px; line-height: 1.7; }
 .package-card :focus-visible { outline-color: #206240; }
 #package-list.is-stale .package-card { border-top-color: #9b7842; }
 @media (max-width: 520px) { .package-intro .card-heading h2 { font-size: 22px; } .package-card-heading { padding: 21px 20px 18px; } .package-card-body { padding: 20px 20px 0; } .package-actions { padding: 18px 20px 21px; } }
+.model-panel { border-color: #66816a; }
+.model-panel .eyebrow { margin: 0 0 7px; }
+.model-panel > .hint { max-width: 70ch; line-height: 1.7; }
+.model-connection-row { display: flex; gap: 12px; align-items: stretch; margin: 10px 0; }
+.model-connection-row input { flex: 1; min-width: 0; padding: 12px 14px; border: 1px solid #617263; border-radius: 7px; color: var(--text); background: #13201b; font: inherit; }
+.model-connection-row button { flex: 0 0 auto; }
+.model-panel .button-row { margin: 14px 0; }
+#model-status { margin: 0; }
+@media (max-width: 520px) { .model-connection-row { flex-direction: column; } .model-connection-row button { width: 100%; } }

@@ -40,6 +40,7 @@ export async function publishOnce(file, value) {
 // serialise answer/continuation/review checks; immutable revision files reject
 // competing publications. Running two new mutation servers is unsupported.
 const activeMutations = new Set();
+const WORKFLOW_ACTORS = ['WorkBuddy via local adapter', 'CodeBuddy CLI via API key'];
 export function createStore(directory) {
   const file = (id, suffix) => join(directory, `${validId(id)}.${suffix}.json`);
   async function load(path, optional = false) {
@@ -99,7 +100,7 @@ export function createStore(directory) {
       const preparation = await load(file(id, 'preparation'), true);
       try {
         for (const entry of [plan, preparation].filter(Boolean)) {
-          if (entry.requestId !== id || entry.actor !== 'WorkBuddy via local adapter' || !Number.isFinite(Date.parse(entry.recordedAt))) throw new Error('Invalid workflow record.');
+          if (entry.requestId !== id || !WORKFLOW_ACTORS.includes(entry.actor) || !Number.isFinite(Date.parse(entry.recordedAt))) throw new Error('Invalid workflow record.');
         }
         if (plan) validatePlan(plan.content);
         if (preparation) {
@@ -109,7 +110,7 @@ export function createStore(directory) {
       } catch { throw new AppError(500, 'Stored workflow is invalid. It has not been overwritten.'); }
       const progress = [];
       if (acknowledgement) progress.push({ action: 'Acknowledgement saved', recordedAt: acknowledgement.recordedAt });
-      if (plan) progress.push({ action: 'Read-backed task plan saved', recordedAt: plan.recordedAt });
+      if (plan) progress.push({ action: `${plan.actor} task plan saved`, recordedAt: plan.recordedAt });
       if (preparation) progress.push({ action: 'Event preparation saved for review', recordedAt: preparation.recordedAt });
       const answerHistory = await history(id, 'answers');
       const answers = answerHistory.at(-1) ?? null;
@@ -130,14 +131,17 @@ export function createStore(directory) {
           if (!preparation) throw new Error('No preparation.');
           validateAnswers({ expectedRevision: a.revision - 1, entries: a.entries }, { ...context, continuation: null });
         }
-        for (const c of continuationHistory) validateContinuation(c.content, { ...context, continuation: null });
+        for (const c of continuationHistory) {
+          if (!WORKFLOW_ACTORS.includes(c.actor)) throw new Error('Unknown workflow actor.');
+          validateContinuation(c.content, { ...context, continuation: null });
+        }
         for (const s of packageHistory) {
           if (!continuationHistory.some((c) => c.revision === s.continuationRevision)) throw new Error('Missing package origin.');
           for (const p of s.packages) validatePackage(p.content, { ...context, sourceAnswerRevision: s.answerRevision });
         }
       } catch { throw new AppError(500, 'Saved answer/package history is invalid; originals preserved.'); }
       if (answers) progress.push({ action: `Student answers revision ${answers.revision} saved — explicit resume required`, recordedAt: answers.recordedAt });
-      if (continuation) progress.push({ action: `WorkBuddy continuation revision ${continuation.revision} saved`, recordedAt: continuation.recordedAt });
+      if (continuation) progress.push({ action: `${continuation.actor} continuation revision ${continuation.revision} saved`, recordedAt: continuation.recordedAt });
       if (packageState) progress.push({ action: `Package edit/review revision ${packageState.revision} saved`, recordedAt: packageState.recordedAt });
       const stale = Boolean(continuation && continuation.content.answerRevision !== answers?.revision);
       const packages = packageState && packageState.continuationRevision === continuation?.revision ? packageState.packages : (continuation?.content.packages ?? []).map((content) => ({ content, review: null }));
@@ -153,7 +157,8 @@ export function createStore(directory) {
       return this.get(id);
       });
     },
-    async continueTask(id, content, receiptRevision) {
+    async continueTask(id, content, receiptRevision, actor = WORKFLOW_ACTORS[0]) {
+      if (!WORKFLOW_ACTORS.includes(actor)) throw new AppError(400, 'Invalid workflow actor.');
       return locked(id, async () => {
       const request = await this.get(id);
       if (!content || typeof content !== 'object' || Array.isArray(content)) throw new AppError(400, 'Continuation content must be an object.');
@@ -163,7 +168,7 @@ export function createStore(directory) {
         throw new AppError(409, 'Continuation for this answer revision exists; original preserved.');
       }
       validateContinuation(content, request);
-      await append(id, 'continuation', request.continuationRevision, { content, actor: 'WorkBuddy via local adapter' });
+      await append(id, 'continuation', request.continuationRevision, { content, actor });
       return this.get(id);
       });
     },
@@ -188,7 +193,8 @@ export function createStore(directory) {
       return this.get(id);
       });
     },
-    async saveWorkflow(id, kind, content) {
+    async saveWorkflow(id, kind, content, actor = WORKFLOW_ACTORS[0]) {
+      if (!WORKFLOW_ACTORS.includes(actor)) throw new AppError(400, 'Invalid workflow actor.');
       if (!['plan', 'preparation'].includes(kind)) throw new AppError(400, 'Invalid workflow operation.');
       const request = await this.get(id);
       if (kind === 'plan') validatePlan(content);
@@ -196,7 +202,7 @@ export function createStore(directory) {
         if (!request.plan) throw new AppError(409, 'Save the task plan before the preparation result.');
         validateResult(content, request);
       }
-      const record = { requestId: id, actor: 'WorkBuddy via local adapter', recordedAt: new Date().toISOString(), content };
+      const record = { requestId: id, actor, recordedAt: new Date().toISOString(), content };
       if (kind === 'preparation') record.planRecordedAt = request.plan.recordedAt;
       try { await publishOnce(file(id, kind), record); }
       catch (error) {

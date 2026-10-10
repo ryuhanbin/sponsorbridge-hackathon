@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
 import { randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
 import { AppError, createStore, validId, text } from './store.mjs';
+import { createModelBridge } from './model-bridge.mjs';
 
 export const APP_ROOT = fileURLToPath(new URL('.', import.meta.url));
 export const DATA_DIRECTORY = join(APP_ROOT, 'data');
@@ -39,8 +40,9 @@ async function readBody(req) {
   try { return JSON.parse(Buffer.concat(parts).toString('utf8')); }
   catch { throw new AppError(400, 'Invalid JSON body.'); }
 }
-export async function createApplication({ directory = DATA_DIRECTORY, agentKey } = {}) {
+export async function createApplication({ directory = DATA_DIRECTORY, agentKey, modelInvoke, cliPath, nodePath } = {}) {
   const store = createStore(directory); await store.init();
+  const modelBridge = createModelBridge({ store, directory, invoke: modelInvoke, cliPath, nodePath });
   agentKey ??= await loadAgentKey(directory);
   const browserToken = randomBytes(32).toString('hex');
   const receiptSecret = randomBytes(32);
@@ -92,6 +94,20 @@ export async function createApplication({ directory = DATA_DIRECTORY, agentKey }
       if (req.method === 'GET' && path === '/api/session') {
         json(200, { token: browserToken }); return;
       }
+      if (req.method === 'GET' && path === '/api/model/status') {
+        json(200, modelBridge.status(validId(url.searchParams.get('id')))); return;
+      }
+      if (req.method === 'POST' && ['/api/model/connect', '/api/model/disconnect', '/api/model/start'].includes(path)) {
+        if (!sameSecret(req.headers['x-browser-token'], browserToken)) throw new AppError(403, 'Browser session required. Reload before connecting or starting AI.');
+        const body = await readBody(req);
+        if (!body || typeof body !== 'object' || Array.isArray(body)) throw new AppError(400, 'Expected a JSON object.');
+        const allowed = path === '/api/model/connect' ? ['key'] : path === '/api/model/start' ? ['id'] : [];
+        if (Object.keys(body).some((field) => !allowed.includes(field)) || allowed.some((field) => !(field in body))) throw new AppError(400, 'Unexpected connection field.');
+        if (path === '/api/model/connect') json(200, modelBridge.connect(body.key));
+        else if (path === '/api/model/disconnect') json(200, modelBridge.disconnect());
+        else json(202, await modelBridge.start(body.id));
+        return;
+      }
       if (req.method === 'POST' && path === '/api/requests') {
         if (!sameSecret(req.headers['x-browser-token'], browserToken)) throw new AppError(403, 'Session expired. Reload and try again.');
         json(201, await store.create(await readBody(req))); return;
@@ -134,7 +150,7 @@ export async function createApplication({ directory = DATA_DIRECTORY, agentKey }
   return { server, store };
 }
 export async function startApplication(options = {}) {
-  const port = options.port ?? 4317;
+  const port = options.port ?? Number(process.env.SPONSORBRIDGE_PORT ?? 4317);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Invalid port.');
   const app = await createApplication(options);
   await new Promise((yes, no) => { app.server.once('error', no); app.server.listen(port, '127.0.0.1', yes); });

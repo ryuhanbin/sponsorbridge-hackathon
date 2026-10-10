@@ -18,6 +18,7 @@ Implemented:
 - Save student answers and, after an explicit WorkBuddy resume, persist updated event information and product/service package drafts.
 - Edit package content through an advanced JSON editor and mark individual packages content-reviewed.
 - Clear the affected package review after an edit; new answers make the continuation stale and invalidate current reviews.
+- Optionally run the installed CodeBuddy CLI with a platform API key from the Activity view. One explicit run prepares the event or, after answers, drafts cards. The app checks the result against its source and package rules before saving it, and labels its author as CodeBuddy CLI.
 - Responsive Overview, Clarifications, Packages, and Activity & handoff views, source evidence, and unsaved-change warnings.
 
 **Content review is not university approval, sponsor acceptance, or an agreement.**
@@ -75,6 +76,19 @@ Saving in the website **does not launch, wake, or resume WorkBuddy**. WorkBuddy 
 
 The adapter supports `read`, `ack`, `plan`, `preparation`, and `continuation`. Writes require a fresh read receipt bound to the request and answer revision. Receipts expire after 30 minutes and are invalid after a server restart; reread rather than reuse them. Do not write live workflow records directly.
 
+## Optional CodeBuddy API key connection
+
+The international CodeBuddy account provides a platform API key for CodeBuddy CLI. This route runs the CLI shipped with WorkBuddy as a **separate, tool-free model process**; it does not send a message to an existing WorkBuddy desktop conversation. The manual WorkBuddy route above remains available. The optional run may consume account credits, and key creation alone does not prove which credit pack it will use.
+
+1. Open a saved request and choose **Activity & handoff → Use your CodeBuddy API key**.
+2. Paste the platform key into the local form and choose **Connect key**. The server keeps it in memory only, clears the field, and never returns the key to the browser or saves it in `data/`.
+3. Choose **Prepare event with AI** for a new request. Review and answer the resulting questions. Then choose **Draft sponsorship cards with AI**. Each click starts at most one run; the page displays its actual status.
+4. Review the source-linked output and cards. A model response that fails validation is rejected; it is not shown as a completed draft.
+
+The connection ends when the server restarts or you press **Disconnect key**. The CLI runs without file or command tools; the local server supplies the saved inputs and validates its returned JSON. The CLI path defaults to WorkBuddy's Windows bundle and can be set with `CODEBUDDY_CLI_PATH` for another supported installation. This repository contains no API key. Live model access still needs a user-entered key and a successful account call; the included tests use a fake model response and spend no credits.
+
+![Optional local CodeBuddy connection](evidence/SponsorBridge-codebuddy-connection.png)
+
 ## Architecture
 
 ```text
@@ -87,6 +101,7 @@ workflow.mjs + packages.mjs + store.mjs
 Local data/ JSON files (outside public assets)
 
 WorkBuddy -- manual tool execution --> adapter.mjs --> local Node service
+Browser -- explicit AI run --> model-bridge.mjs --> CodeBuddy CLI model --> validated local records
 ```
 
 The service uses Node built-ins, loopback-only HTTP, browser-session tokens, local-key adapter authorisation, and read receipts. Disk records preserve original input, answers, continuations, package edits, and content reviews. This is bounded local authorisation, **not cryptographic proof of WorkBuddy identity** or a production student account system. The conversation's actual tool actions establish the historical execution evidence.
@@ -111,10 +126,10 @@ Screenshots capture the earlier demonstration; their displayed review counts are
 Run the existing Node checks from the repository root:
 
 ```sh
-node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mjs
+node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mjs test/model-bridge.test.mjs
 ```
 
-- **11 October 2026:** the copied submission passed all **22 existing Node checks**, as reported in the submission preparation. This README-generation task did not rerun them.
+- **11 October 2026:** all **23 Node checks** passed, including an isolated fake-model run that exercises the local connection, preparation, answers, cards, source attribution, and key non-disclosure. It does not verify a live paid model call.
 - **10 October 2026:** earlier WorkBuddy reports recorded **63 Chrome UI checks**, including responsive widths and isolated in-memory mutation checks. These are historical results, **not freshly rerun browser checks**; mocked UI actions are not live WorkBuddy execution.
 - `evidence/` contains the existing request, overview, and package screenshots. Browser verification tooling is separate from the runtime and is not needed to start the app.
 
@@ -122,6 +137,6 @@ node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mj
 
 Working scope is **preparation, clarification answers, editable packages, and content review**. Business matching, personalised sponsor pitches, and complete campaign export remain **planned**, not implemented.
 
-The prototype is local, single-user and single-mutation-process. It is not multi-user production infrastructure. There is no automatic website dispatch, outreach, payment processing, hosted deployment, or live university integration. Exact source quotes support traceability but do not prove that an edited claim is semantically justified. Student review remains necessary. No student usability study, full screen-reader audit, or physical-device assurance is claimed.
+The prototype is local, single-user and single-mutation-process. It is not multi-user production infrastructure. The optional website dispatch targets CodeBuddy CLI, not the WorkBuddy desktop conversation. There is no outreach, payment processing, hosted deployment, or live university integration. Exact source quotes support traceability but do not prove that an edited claim is semantically justified. Student review remains necessary. No student usability study, full screen-reader audit, or physical-device assurance is claimed.
 
 No businesses were contacted, no funds were processed, and no university approval or sponsorship commitment was obtained.
