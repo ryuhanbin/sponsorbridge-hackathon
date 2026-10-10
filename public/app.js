@@ -5,7 +5,7 @@ const WORKSPACE = 'the app directory containing adapter.mjs (open sponsorbridge/
 let browserToken, timer, currentRequest, answersRenderedKey = '', answersDirty = false, packageRenderedKey = '', preparationRenderedKey = '';
 let modelConnected = false, modelRun = null;
 let nextView = 'activity', networkError = '';
-const VIEW_NAMES = {overview: 'Overview', clarifications: 'Clarifications', packages: 'Packages', activity: 'Activity & handoff'};
+const VIEW_NAMES = {overview: 'Overview', clarifications: 'Clarifications', packages: 'Packages', activity: 'AI draft & activity'};
 const FIELD_LABELS = {eventName: 'Event name', organiser: 'Organiser', purpose: 'Purpose', activities: 'Activities', audience: 'Audience', date: 'Date & time', venue: 'Venue', attendance: 'Expected attendance', budget: 'Budget', currency: 'Currency', supportNeeds: 'Support needed', supportQuantities: 'Support quantities', sponsorshipBenefits: 'Sponsor benefits', approvals: 'Permissions & approvals', taxEligibility: 'Tax eligibility'};
 const packageEdits = new Map();
 function showError(message) { $('error').textContent = message; $('error').hidden = !message; }
@@ -91,8 +91,8 @@ function renderWorkspace(request) {
   $('review-count').textContent = `${reviewed} / ${packages} CONTENT REVIEWED`;
   if (request.continuationStale || request.status === 'answers_saved') {
     title = 'Your answers are saved. Draft cards next.';
-    description = 'Start a connected CodeBuddy run here, or copy the instruction into WorkBuddy. Saving answers alone does not start either agent.';
-    action = 'Open AI options'; nextView = 'activity';
+    description = 'Use the draft button to turn your saved answers into sponsorship cards.';
+    action = 'Draft sponsorship cards'; nextView = 'activity';
   } else if (request.continuation && packages) {
     title = reviewed === packages ? 'Content reviewed. Permissions still matter.' : `Review your ${packages} package ${packages === 1 ? 'draft' : 'drafts'}`;
     description = `${reviewed} of ${packages} content reviewed. Confirm the request, supported benefits, and outstanding permissions. Review is not approval.`;
@@ -105,8 +105,8 @@ function renderWorkspace(request) {
     action = 'View clarifications'; nextView = 'clarifications';
   } else {
     title = request.plan ? 'A plan is recorded. Prepare the event.' : 'Your request is saved. Prepare the event.';
-    description = 'Connect a CodeBuddy API key for one automatic draft, or copy the instruction into WorkBuddy.';
-    action = 'Open AI options'; nextView = 'activity';
+    description = 'Start the sponsorship draft. The AI will ask for any essential missing details first.';
+    action = 'Draft sponsorship cards'; nextView = 'activity';
   }
   $('next-title').textContent = title; $('next-description').textContent = description;
   $('next-action').replaceChildren(document.createTextNode(action), node('span', '→'));
@@ -260,7 +260,7 @@ $('answers-form').addEventListener('submit', async (e) => {
   e.preventDefault(); showError('');
   const expectedRevision=Number(answersRenderedKey.split(':').at(-1));
   const entries=[...$('answer-fields').children].map((row)=>({questionId:row.dataset.questionId,state:row.querySelector('select').value,value:row.querySelector('select').value==='confirmed'?row.querySelector('textarea').value:''}));
-  try { const r=await browserPost('answers',{expectedRevision,entries});answersDirty=false;answersRenderedKey='';render(r);$('answer-feedback').textContent='Answers saved. Open Activity to start a CodeBuddy run or continue manually in WorkBuddy.';} catch(err){showError(err.message);}
+  try { const r=await browserPost('answers',{expectedRevision,entries});answersDirty=false;answersRenderedKey='';render(r);$('answer-feedback').textContent='Answers saved. Open Activity and choose Draft sponsorship cards.';} catch(err){showError(err.message);}
 });
 async function observe(id) {
   clearTimeout(timer);
@@ -280,24 +280,40 @@ async function observe(id) {
   timer = setTimeout(() => observe(id), 2000);
 }
 function setupModelPanel() {
+  const view = $('view-activity');
   const panel = document.createElement('article');
   panel.id = 'model-panel'; panel.className = 'panel model-panel';
-  panel.innerHTML = `<div class="card-heading"><div><p class="eyebrow">OPTIONAL AUTOMATIC DRAFT</p><h2>Use your CodeBuddy API key</h2></div><span class="subtle-badge">LOCAL CONNECTION</span></div><p class="hint">CodeBuddy CLI can read this saved request and prepare a draft here. It is a separate model route from the WorkBuddy desktop assistant. One click starts one credit-using run; results appear only after the app validates and saves them.</p><form id="model-connect-form"><label for="model-key">Platform API key</label><div class="model-connection-row"><input id="model-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste key here on this computer" required><button type="submit">Connect key</button></div><p class="hint">The key is saved in this computer's private local data folder and restored after a restart. Disconnect key removes it. It is never added to the public repository.</p></form><div class="button-row"><button id="model-start" type="button" disabled>Run AI for this request</button><button id="model-disconnect" class="secondary-button" type="button" hidden>Disconnect key</button></div><p id="model-status" class="hint" role="status">Checking connection…</p>`;
-  $('view-activity').prepend(panel);
+  panel.innerHTML = `<p class="eyebrow">AI SPONSORSHIP DRAFT</p><h2>Turn your event details into sponsor-ready cards</h2><p class="hint">Review every draft before using it. Each run may use CodeBuddy credits.</p><button id="model-start" type="button">Draft sponsorship cards</button><p id="model-status" class="hint" role="status">Checking draft status…</p>`;
+  const advanced = document.createElement('details');
+  advanced.id = 'advanced-activity'; advanced.className = 'inner-disclosure';
+  advanced.innerHTML = `<summary>Advanced: WorkBuddy handoff and saved activity</summary><div class="button-row"><button id="model-disconnect" class="secondary-button" type="button" hidden>Forget saved AI key</button></div>`;
+  for (const child of [...view.children]) advanced.append(child);
+  const dialog = document.createElement('dialog');
+  dialog.id = 'model-key-dialog';
+  dialog.innerHTML = `<form id="model-connect-form"><h2>Connect CodeBuddy once</h2><p class="hint">Enter your platform API key to start the draft. It is saved only in this computer's local backend data and is never uploaded to GitHub.</p><label for="model-key">Platform API key</label><input id="model-key" type="password" autocomplete="off" spellcheck="false" required><p id="model-key-error" class="hint" role="alert"></p><div class="button-row"><button type="submit">Save key and start draft</button><button id="model-key-cancel" class="secondary-button" type="button">Cancel</button></div></form>`;
+  view.append(panel, advanced, dialog);
   $('model-connect-form').addEventListener('submit', async (event) => {
-    event.preventDefault(); showError('');
+    event.preventDefault(); $('model-key-error').textContent = '';
     const input = $('model-key');
-    try { await modelPost('/api/model/connect', { key: input.value }); input.value = ''; modelConnected = true; renderModelPanel(); }
-    catch (error) { input.value = ''; showError(error.message); }
+    try { await modelPost('/api/model/connect', { key: input.value }); input.value = ''; modelConnected = true; dialog.close(); renderModelPanel(); await startModelRun(); }
+    catch (error) { input.value = ''; $('model-key-error').textContent = error.message; }
   });
+  dialog.addEventListener('close', () => { $('model-key').value = ''; $('model-key-error').textContent = ''; });
+  $('model-key-cancel').addEventListener('click', () => { $('model-key').value = ''; dialog.close(); });
   $('model-disconnect').addEventListener('click', async () => {
     showError(''); try { await modelPost('/api/model/disconnect', {}); modelConnected = false; renderModelPanel(); } catch (error) { showError(error.message); }
   });
   $('model-start').addEventListener('click', async () => {
-    showError(''); $('model-start').disabled = true;
-    try { modelRun = await modelPost('/api/model/start', { id: currentRequest.id }); renderModelPanel(); }
-    catch (error) { showError(error.message); renderModelPanel(); }
+    const ready = !currentRequest.preparation || (currentRequest.answerRevision > 0 && (!currentRequest.continuation || currentRequest.continuationStale));
+    if (!ready) { setView(currentRequest.continuation ? 'packages' : 'clarifications', true); return; }
+    if (!modelConnected) { dialog.showModal(); $('model-key').focus(); return; }
+    await startModelRun();
   });
+}
+async function startModelRun() {
+  showError(''); $('model-start').disabled = true;
+  try { modelRun = await modelPost('/api/model/start', { id: currentRequest.id }); renderModelPanel(); }
+  catch (error) { showError(error.message); renderModelPanel(); }
 }
 async function modelPost(path, body) {
   browserToken ??= (await api('/api/session')).token;
@@ -306,12 +322,10 @@ async function modelPost(path, body) {
 function renderModelPanel() {
   if (!currentRequest || !$('model-panel')) return;
   const ready = !currentRequest.preparation || (currentRequest.answerRevision > 0 && (!currentRequest.continuation || currentRequest.continuationStale));
-  $('model-connect-form').hidden = modelConnected;
   $('model-disconnect').hidden = !modelConnected;
   $('model-disconnect').disabled = modelRun?.state === 'running';
-  $('model-start').disabled = !modelConnected || !ready || modelRun?.state === 'running';
-  $('model-start').textContent = !currentRequest.preparation ? 'Prepare event with AI' : 'Draft sponsorship cards with AI';
-  $('model-status').textContent = modelRun?.state === 'running' ? `Running: ${modelRun.message}. This can take a few minutes.` : modelRun?.state === 'failed' ? `Last run failed: ${modelRun.message}` : modelRun?.state === 'completed' ? `Last run completed: ${modelRun.message}` : !modelConnected ? 'Connect your key to enable this option.' : ready ? 'Key saved locally. API access will be checked when you start a run.' : 'Key saved locally. Answer the clarification questions to draft cards, or review the saved result.';
+  $('model-start').disabled = modelRun?.state === 'running';
+  $('model-status').textContent = modelRun?.state === 'running' ? `Running: ${modelRun.message}. This can take a few minutes.` : modelRun?.state === 'failed' ? `Last run failed: ${modelRun.message}` : !ready ? currentRequest.continuation ? 'Cards are already saved. Press the button to review them.' : 'Answer the clarification questions, then return to draft the cards.' : !currentRequest.preparation ? 'First, AI will prepare your event details and questions. After answering, press this button again to create cards.' : !modelConnected ? 'Your first use will ask for the key once.' : 'Ready to turn your saved answers into draft cards.';
 }
 $('request-form').addEventListener('submit', async (event) => {
   event.preventDefault(); showError('');

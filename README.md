@@ -80,14 +80,14 @@ The adapter supports `read`, `ack`, `plan`, `preparation`, and `continuation`. W
 
 The international CodeBuddy account provides a platform API key for CodeBuddy CLI. This route runs the CLI shipped with WorkBuddy as a **separate, tool-free model process**; it does not send a message to an existing WorkBuddy desktop conversation. The manual WorkBuddy route above remains available. The optional run may consume account credits, and key creation alone does not prove which credit pack it will use.
 
-1. Open a saved request and choose **Activity & handoff → Use your CodeBuddy API key**.
-2. Paste the platform key into the local form and choose **Connect key** once. The server saves it as `data/.codebuddy-key` on this computer, clears the field, and never returns the key to the browser. The file is plain text, so keep the local data folder private; the entire `data/` directory is ignored by Git.
-3. Choose **Prepare event with AI** for a new request. Review and answer the resulting questions. Then choose **Draft sponsorship cards with AI**. Each click starts at most one run; the page displays its actual status.
+1. Open a saved request and choose **AI draft & activity → Draft sponsorship cards**.
+2. On first use, the small setup dialog asks for the platform key. Choose **Save key and start draft**. The server saves it as `data/.codebuddy-key` on this computer, clears the field, and never returns the key to the browser. The file is plain text, so keep the local data folder private; the entire `data/` directory is ignored by Git.
+3. On a new request, the first run prepares event details and questions. Review and answer them, then choose **Draft sponsorship cards** again. Each click starts at most one run; the page displays its actual status. When cards already exist, the button opens them without starting another run.
 4. Review the source-linked output and cards. A model response that fails validation is rejected; it is not shown as a completed draft.
 
 The local connection is restored after a server restart. **Disconnect key** removes the saved key. The CLI runs without file or command tools; the local server supplies the saved inputs and validates its streamed reply. It applies narrow formatting repairs to clarification questions, future checklist IDs/status, and unresolved answer sources, then rejects any unsupported facts or package promises. The CLI path defaults to WorkBuddy's Windows bundle and can be set with `CODEBUDDY_CLI_PATH` for another supported installation. This repository contains no API key.
 
-![Optional local CodeBuddy connection](evidence/SponsorBridge-codebuddy-connection.png)
+The manual WorkBuddy handoff and saved activity remain available under **Advanced** on the same screen.
 
 ## Architecture
 
