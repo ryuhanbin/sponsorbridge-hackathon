@@ -42,7 +42,7 @@ async function readBody(req) {
 }
 export async function createApplication({ directory = DATA_DIRECTORY, agentKey, modelInvoke, cliPath, nodePath } = {}) {
   const store = createStore(directory); await store.init();
-  const modelBridge = createModelBridge({ store, directory, invoke: modelInvoke, cliPath, nodePath });
+  const modelBridge = await createModelBridge({ store, directory, invoke: modelInvoke, cliPath, nodePath });
   agentKey ??= await loadAgentKey(directory);
   const browserToken = randomBytes(32).toString('hex');
   const receiptSecret = randomBytes(32);
@@ -103,8 +103,8 @@ export async function createApplication({ directory = DATA_DIRECTORY, agentKey, 
         if (!body || typeof body !== 'object' || Array.isArray(body)) throw new AppError(400, 'Expected a JSON object.');
         const allowed = path === '/api/model/connect' ? ['key'] : path === '/api/model/start' ? ['id'] : [];
         if (Object.keys(body).some((field) => !allowed.includes(field)) || allowed.some((field) => !(field in body))) throw new AppError(400, 'Unexpected connection field.');
-        if (path === '/api/model/connect') json(200, modelBridge.connect(body.key));
-        else if (path === '/api/model/disconnect') json(200, modelBridge.disconnect());
+        if (path === '/api/model/connect') json(200, await modelBridge.connect(body.key));
+        else if (path === '/api/model/disconnect') json(200, await modelBridge.disconnect());
         else json(202, await modelBridge.start(body.id));
         return;
       }

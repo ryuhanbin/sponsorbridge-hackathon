@@ -87,3 +87,36 @@ test('Local API key runs save validated, honestly attributed drafts without expo
   assert.equal((await post('/api/model/disconnect', {})).body.connected, false);
   assert.equal((await get(`/api/model/status?id=${id}`)).body.connected, false);
 });
+
+test('Local API key survives a restart and disconnect removes the saved key', async () => {
+  const root = join(APP_ROOT, 'test', '.temporary'); await mkdir(root, { recursive: true });
+  const directory = await mkdtemp(join(root, 'saved-model-key-'));
+  const secret = 'ck_TEST_RESTART_SECRET_DO_NOT_PUBLISH';
+  const savedPath = join(directory, '.codebuddy-key');
+  const first = await startApplication({ port: 0, directory });
+  const firstBase = `http://127.0.0.1:${first.server.address().port}`;
+  const firstToken = (await (await fetch(`${firstBase}/api/session`)).json()).token;
+  const connected = await fetch(`${firstBase}/api/model/connect`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Browser-Token': firstToken }, body: JSON.stringify({ key: secret }),
+  });
+  assert.equal(connected.status, 200);
+  assert.equal(await readFile(savedPath, 'utf8'), secret);
+  await new Promise((resolve) => first.server.close(resolve));
+
+  const second = await startApplication({ port: 0, directory });
+  try {
+    const secondBase = `http://127.0.0.1:${second.server.address().port}`;
+    const secondToken = (await (await fetch(`${secondBase}/api/session`)).json()).token;
+    const id = 'req_65163d02-e331-4d92-aa41-10bde1d63f56';
+    const status = await (await fetch(`${secondBase}/api/model/status?id=${id}`)).json();
+    assert.equal(status.connected, true);
+    assert.equal(JSON.stringify(status).includes(secret), false);
+    const disconnected = await fetch(`${secondBase}/api/model/disconnect`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Browser-Token': secondToken }, body: '{}',
+    });
+    assert.equal(disconnected.status, 200);
+    await assert.rejects(readFile(savedPath, 'utf8'), { code: 'ENOENT' });
+  } finally {
+    await new Promise((resolve) => second.server.close(resolve));
+  }
+});

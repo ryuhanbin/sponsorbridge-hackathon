@@ -81,11 +81,11 @@ The adapter supports `read`, `ack`, `plan`, `preparation`, and `continuation`. W
 The international CodeBuddy account provides a platform API key for CodeBuddy CLI. This route runs the CLI shipped with WorkBuddy as a **separate, tool-free model process**; it does not send a message to an existing WorkBuddy desktop conversation. The manual WorkBuddy route above remains available. The optional run may consume account credits, and key creation alone does not prove which credit pack it will use.
 
 1. Open a saved request and choose **Activity & handoff → Use your CodeBuddy API key**.
-2. Paste the platform key into the local form and choose **Connect key**. The server keeps it in memory only, clears the field, and never returns the key to the browser or saves it in `data/`.
+2. Paste the platform key into the local form and choose **Connect key** once. The server saves it as `data/.codebuddy-key` with restricted file permissions, clears the field, and never returns the key to the browser. The entire `data/` directory is ignored by Git.
 3. Choose **Prepare event with AI** for a new request. Review and answer the resulting questions. Then choose **Draft sponsorship cards with AI**. Each click starts at most one run; the page displays its actual status.
 4. Review the source-linked output and cards. A model response that fails validation is rejected; it is not shown as a completed draft.
 
-The connection ends when the server restarts or you press **Disconnect key**. The CLI runs without file or command tools; the local server supplies the saved inputs and validates its streamed reply. It applies narrow formatting repairs to clarification questions, future checklist IDs/status, and unresolved answer sources, then rejects any unsupported facts or package promises. The CLI path defaults to WorkBuddy's Windows bundle and can be set with `CODEBUDDY_CLI_PATH` for another supported installation. This repository contains no API key.
+The local connection is restored after a server restart. **Disconnect key** removes the saved key. The CLI runs without file or command tools; the local server supplies the saved inputs and validates its streamed reply. It applies narrow formatting repairs to clarification questions, future checklist IDs/status, and unresolved answer sources, then rejects any unsupported facts or package promises. The CLI path defaults to WorkBuddy's Windows bundle and can be set with `CODEBUDDY_CLI_PATH` for another supported installation. This repository contains no API key.
 
 ![Optional local CodeBuddy connection](evidence/SponsorBridge-codebuddy-connection.png)
 
@@ -135,7 +135,7 @@ Run the existing Node checks from the repository root:
 node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mjs test/model-bridge.test.mjs
 ```
 
-- **11 October 2026:** all **24 Node checks** passed, including isolated fake-model preparation and card runs, stream parsing, source attribution, key non-disclosure, and formatting repair.
+- **11 October 2026:** all **25 Node checks** passed, including isolated fake-model preparation and card runs, stream parsing, source attribution, key persistence and removal, key non-disclosure, and formatting repair.
 - **11 October 2026:** a live CodeBuddy CLI account call generated the fictional fair drafts. The first responses needed deterministic formatting repair and were recovered from local CLI traces, validated against the original proposal and answer, then saved. The updated one-click streamed path has automated tests but has not had a fresh live end-to-end run after this final repair.
 - **10 October 2026:** earlier WorkBuddy reports recorded **63 Chrome UI checks**, including responsive widths and isolated in-memory mutation checks. These are historical results, **not freshly rerun browser checks**; mocked UI actions are not live WorkBuddy execution.
 - `evidence/` contains the existing request, overview, and package screenshots. Browser verification tooling is separate from the runtime and is not needed to start the app.

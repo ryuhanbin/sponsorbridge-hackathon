@@ -3,6 +3,7 @@
 node_modules/
 .agent-key
 **/.agent-key
+**/.codebuddy-key
 *.pending
 .env
 .env.*

@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { access, mkdir } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile, unlink, chmod } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AppError, validId } from './store.mjs';
 import { EVENT_FIELDS, validatePlan, validateResult } from './workflow.mjs';
@@ -112,18 +112,28 @@ async function callCli(prompt, key, { directory, cliPath = DEFAULT_CLI, nodePath
   });
 }
 
-export function createModelBridge({ store, directory, invoke = callCli, cliPath, nodePath } = {}) {
-  let key = null;
+export async function createModelBridge({ store, directory, invoke = callCli, cliPath, nodePath } = {}) {
+  const keyPath = join(directory, '.codebuddy-key');
+  let key = await readFile(keyPath, 'utf8').catch((error) => {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  });
+  if (key !== null && (key.length < 12 || key.length > 500 || /[\s\u0000-\u001f]/.test(key))) {
+    throw new Error('Saved CodeBuddy key is invalid. Remove data/.codebuddy-key and reconnect it.');
+  }
   const runs = new Map();
   let active = false;
   return {
-    connect(value) {
+    async connect(value) {
       if (typeof value !== 'string' || value.length < 12 || value.length > 500 || /[\s\u0000-\u001f]/.test(value)) throw new AppError(400, 'Enter a valid platform API key.');
+      await writeFile(keyPath, value, { encoding: 'utf8', mode: 0o600 });
+      await chmod(keyPath, 0o600);
       key = value;
       return { connected: true };
     },
-    disconnect() {
+    async disconnect() {
       if (active) throw new AppError(409, 'Wait for the current AI run to finish before disconnecting.');
+      await unlink(keyPath).catch((error) => { if (error.code !== 'ENOENT') throw error; });
       key = null; return { connected: false };
     },
     status(id) { validId(id); return { connected: Boolean(key), run: runs.get(id) ?? null }; },
