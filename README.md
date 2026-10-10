@@ -85,7 +85,7 @@ The international CodeBuddy account provides a platform API key for CodeBuddy CL
 3. Choose **Prepare event with AI** for a new request. Review and answer the resulting questions. Then choose **Draft sponsorship cards with AI**. Each click starts at most one run; the page displays its actual status.
 4. Review the source-linked output and cards. A model response that fails validation is rejected; it is not shown as a completed draft.
 
-The connection ends when the server restarts or you press **Disconnect key**. The CLI runs without file or command tools; the local server supplies the saved inputs and validates its returned JSON. The CLI path defaults to WorkBuddy's Windows bundle and can be set with `CODEBUDDY_CLI_PATH` for another supported installation. This repository contains no API key. Live model access still needs a user-entered key and a successful account call; the included tests use a fake model response and spend no credits.
+The connection ends when the server restarts or you press **Disconnect key**. The CLI runs without file or command tools; the local server supplies the saved inputs and validates its streamed reply. It applies narrow formatting repairs to clarification questions, future checklist IDs/status, and unresolved answer sources, then rejects any unsupported facts or package promises. The CLI path defaults to WorkBuddy's Windows bundle and can be set with `CODEBUDDY_CLI_PATH` for another supported installation. This repository contains no API key.
 
 ![Optional local CodeBuddy connection](evidence/SponsorBridge-codebuddy-connection.png)
 
@@ -121,6 +121,12 @@ The proposed clinic is **7 November 2026, 09:00–12:00** at **Demo Training Poo
 
 Screenshots capture the earlier demonstration; their displayed review counts are not a live status feed.
 
+## Fictional CodeBuddy card example
+
+The separate **Campus Sustainability Fair** test request produced two in-kind card drafts: reusable bottles and repair-workshop materials. Quantities, date, venue, approvals, and tax status remain unconfirmed. The only draft benefits come from an explicit fictional organiser answer: a logo on the event page and a verbal thank-you during opening remarks. The cards are awaiting content review.
+
+![CodeBuddy-produced fictional sponsorship cards](evidence/SponsorBridge-live-CodeBuddy-cards.png)
+
 ## Tests and evidence
 
 Run the existing Node checks from the repository root:
@@ -129,7 +135,8 @@ Run the existing Node checks from the repository root:
 node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mjs test/model-bridge.test.mjs
 ```
 
-- **11 October 2026:** all **23 Node checks** passed, including an isolated fake-model run that exercises the local connection, preparation, answers, cards, source attribution, and key non-disclosure. It does not verify a live paid model call.
+- **11 October 2026:** all **24 Node checks** passed, including isolated fake-model preparation and card runs, stream parsing, source attribution, key non-disclosure, and formatting repair.
+- **11 October 2026:** a live CodeBuddy CLI account call generated the fictional fair drafts. The first responses needed deterministic formatting repair and were recovered from local CLI traces, validated against the original proposal and answer, then saved. The updated one-click streamed path has automated tests but has not had a fresh live end-to-end run after this final repair.
 - **10 October 2026:** earlier WorkBuddy reports recorded **63 Chrome UI checks**, including responsive widths and isolated in-memory mutation checks. These are historical results, **not freshly rerun browser checks**; mocked UI actions are not live WorkBuddy execution.
 - `evidence/` contains the existing request, overview, and package screenshots. Browser verification tooling is separate from the runtime and is not needed to start the app.
 

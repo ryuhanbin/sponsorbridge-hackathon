@@ -3,6 +3,21 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { APP_ROOT, startApplication } from '../server.mjs';
+import { parseResult, parseStreamResult } from '../model-bridge.mjs';
+
+test('CodeBuddy JSON reader accepts direct and wrapped model drafts', () => {
+  const draft = { plan: { steps: ['Review'] }, preparation: { facts: [] } };
+  assert.deepEqual(parseResult(JSON.stringify(draft)), draft);
+  assert.deepEqual(parseResult(JSON.stringify(JSON.stringify(draft))), draft);
+  assert.deepEqual(parseResult(JSON.stringify({ type: 'result', subtype: 'success', result: JSON.stringify(draft) })), draft);
+  assert.deepEqual(parseResult(JSON.stringify({ type: 'result', subtype: 'success', structured_output: draft })), draft);
+  const stream = [
+    { type: 'system', subtype: 'init' },
+    { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: `\`\`\`json\n${JSON.stringify(draft)}\n\`\`\`` }] } },
+    { type: 'result', subtype: 'success', result: '' },
+  ].map((event) => JSON.stringify(event)).join('\n');
+  assert.deepEqual(parseStreamResult(stream), draft);
+});
 
 const example = join(APP_ROOT, 'examples', 'fictional-swimming-clinic');
 const fixture = async (suffix) => JSON.parse(await readFile(join(example, `req_65163d02-e331-4d92-aa41-10bde1d63f56.${suffix}.json`), 'utf8'));
@@ -15,11 +30,15 @@ test('Local API key runs save validated, honestly attributed drafts without expo
   const preparation = (await fixture('preparation')).content;
   const answers = (await fixture('answers.1')).entries;
   const continuation = (await fixture('continuation.1')).content;
+  const imperfectContinuation = structuredClone(continuation);
+  imperfectContinuation.event.checklist[1].id = imperfectContinuation.event.checklist[0].id;
+  imperfectContinuation.event.checklist[1].status = 'completed';
+  imperfectContinuation.resolutions.find((item) => item.status !== 'resolved').sources = [{ invalid: true }];
   const secret = 'ck_TEST_SECRET_DO_NOT_PUBLISH';
   const calls = [];
   const app = await startApplication({ port: 0, directory, modelInvoke: async (prompt, key) => {
     calls.push({ prompt, key });
-    return calls.length === 1 ? { plan, preparation } : continuation;
+    return calls.length === 1 ? { plan, preparation } : imperfectContinuation;
   } });
   t.after(() => new Promise((resolve) => app.server.close(resolve)));
   const base = `http://127.0.0.1:${app.server.address().port}`;
