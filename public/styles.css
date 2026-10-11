@@ -84,6 +84,10 @@ textarea:hover, input[type="password"]:hover { border-color: #838383; }
 textarea::placeholder, input::placeholder { color: #707070; }
 textarea:disabled { background: #f0f0f0; color: #686868; cursor: not-allowed; }
 textarea[aria-invalid="true"] { border-color: var(--danger); }
+.pdf-import { display: flex; align-items: center; flex-wrap: wrap; gap: 9px 14px; margin-top: 12px; }
+.pdf-import .secondary-button { min-height: 38px; padding: 8px 12px; font-size: 12px; }
+.pdf-import .hint { flex: 1 1 210px; margin: 0; font-size: 11px; }
+#proposal-pdf-status { min-height: 18px; margin: 7px 0 0; font-size: 11px; }
 .field-bottom { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .field-bottom .hint, .char-count { font-size: 10px; margin: 8px 0 0; }
 .char-count { color: var(--muted); white-space: nowrap; }

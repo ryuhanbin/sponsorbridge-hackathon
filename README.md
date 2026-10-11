@@ -18,6 +18,7 @@ The prototype is motivated by the need to clarify support quantities and timing,
 
 Implemented:
 - Save an original event proposal and sponsorship goal without overwriting them.
+- Import selectable text from a PDF proposal into the event-proposal field for review before saving. The PDF file is processed locally and is not kept; scanned/image-only PDFs need OCR first.
 - Have WorkBuddy read the saved request through a bounded local adapter, record a plan, extract source-linked facts, and ask clarification questions.
 - Save student answers and, after an explicit WorkBuddy resume, persist updated event information and product/service package drafts.
 - Edit package content through an advanced JSON editor and mark individual packages content-reviewed.
@@ -29,11 +30,12 @@ Implemented:
 
 ## Run locally
 
-Require **Node.js 22 or newer**. Application files are **at the repository root**. There are **no runtime npm dependencies** and no `npm install` step is required.
+Require **Node.js 22.13 or newer**. Application files are **at the repository root**. Install the locked PDF.js dependency once before starting:
 
 From the repository root:
 
 ```sh
+npm ci
 node server.mjs
 ```
 
@@ -142,10 +144,10 @@ A small business can select an in-kind offer and interests. The fictional sample
 Run the existing Node checks from the repository root:
 
 ```sh
-node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mjs test/model-bridge.test.mjs test/publication.test.mjs
+npm test
 ```
 
-- **11 October 2026:** all **27 Node checks** passed, including isolated fake-model preparation and card runs, stream parsing, source attribution, key persistence and removal, formatting repair, and publication privacy/staleness checks.
+- **11 October 2026:** all **29 Node checks** passed, including isolated fake-model preparation and card runs, stream parsing, source attribution, key persistence and removal, formatting repair, publication privacy/staleness checks, and PDF text import.
 - **11 October 2026:** a live CodeBuddy CLI account call generated the fictional fair drafts. The first responses needed deterministic formatting repair and were recovered from local CLI traces, validated against the original proposal and answer, then saved. The updated one-click streamed path has automated tests but has not had a fresh live end-to-end run after this final repair.
 - **10 October 2026:** earlier WorkBuddy reports recorded **63 Chrome UI checks**, including responsive widths and isolated in-memory mutation checks. These are historical results, **not freshly rerun browser checks**; mocked UI actions are not live WorkBuddy execution.
 - **11 October 2026 UI rebrand:** the approved light/monochrome interface was renamed PUTRApitch across the local app and deck, with an original project logo. The reference-restyle check passed 134 browser assertions, followed by 138 rebrand browser assertions across eight widths (320–1440 px), including in-memory edit/review tests; 29 live data/key files were unchanged. These are UI checks, not another live sponsorship-model run.

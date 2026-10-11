@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
 import { AppError, createStore, validId, text } from './store.mjs';
 import { createModelBridge } from './model-bridge.mjs';
+import { extractProposalText, PDF_BYTE_LIMIT } from './pdf-import.mjs';
 
 export const APP_ROOT = fileURLToPath(new URL('.', import.meta.url));
 export const DATA_DIRECTORY = join(APP_ROOT, 'data');
@@ -39,6 +40,17 @@ async function readBody(req) {
   }
   try { return JSON.parse(Buffer.concat(parts).toString('utf8')); }
   catch { throw new AppError(400, 'Invalid JSON body.'); }
+}
+async function readPdf(req) {
+  if (!/^application\/pdf(?:\s*;|$)/i.test(req.headers['content-type'] ?? '')) throw new AppError(415, 'Choose a PDF file.');
+  const parts = []; let size = 0;
+  for await (const part of req) {
+    size += part.length;
+    if (size > PDF_BYTE_LIMIT) throw new AppError(413, 'Choose a PDF smaller than 5 MB.');
+    parts.push(part);
+  }
+  if (!size) throw new AppError(400, 'Choose a PDF file.');
+  return Buffer.concat(parts);
 }
 export async function createApplication({ directory = DATA_DIRECTORY, agentKey, modelInvoke, cliPath, nodePath } = {}) {
   const store = createStore(directory); await store.init();
@@ -99,6 +111,10 @@ export async function createApplication({ directory = DATA_DIRECTORY, agentKey, 
       }
       if (req.method === 'GET' && path === '/api/session') {
         json(200, { token: browserToken }); return;
+      }
+      if (req.method === 'POST' && path === '/api/proposals/extract-pdf') {
+        if (!sameSecret(req.headers['x-browser-token'], browserToken)) throw new AppError(403, 'Browser session required. Reload before importing a PDF.');
+        json(200, await extractProposalText(await readPdf(req))); return;
       }
       if (req.method === 'GET' && path === '/api/marketplace/listings') {
         json(200, { listings: await store.listPublicListings() }); return;

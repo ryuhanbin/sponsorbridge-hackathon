@@ -4,6 +4,7 @@ const NODE = 'node';
 const WORKSPACE = 'the app directory containing adapter.mjs (open sponsorbridge/ if it is inside the selected workspace)';
 let browserToken, timer, currentRequest, answersRenderedKey = '', answersDirty = false, packageRenderedKey = '', preparationRenderedKey = '';
 let modelConnected = false, modelRun = null;
+let pdfImporting = false;
 let nextView = 'activity', networkError = '';
 const VIEW_NAMES = {overview: 'Overview', clarifications: 'Clarifications', packages: 'Packages', activity: 'AI draft & activity'};
 const FIELD_LABELS = {eventName: 'Event name', organiser: 'Organiser', purpose: 'Purpose', activities: 'Activities', audience: 'Audience', date: 'Date & time', venue: 'Venue', attendance: 'Expected attendance', budget: 'Budget', currency: 'Currency', supportNeeds: 'Support needed', supportQuantities: 'Support quantities', sponsorshipBenefits: 'Sponsor benefits', approvals: 'Permissions & approvals', taxEligibility: 'Tax eligibility'};
@@ -359,8 +360,50 @@ function renderModelPanel() {
   $('model-start').disabled = modelRun?.state === 'running';
   $('model-status').textContent = modelRun?.state === 'running' ? `Running: ${modelRun.message}. This can take a few minutes.` : modelRun?.state === 'failed' ? `Last run failed: ${modelRun.message}` : !ready ? currentRequest.continuation ? 'Cards are already saved. Press the button to review them.' : 'Answer the clarification questions, then return to draft the cards.' : !currentRequest.preparation ? 'First, AI will prepare your event details and questions. After answering, press this button again to create cards.' : !modelConnected ? 'Your first use will ask for the key once.' : 'Ready to turn your saved answers into draft cards.';
 }
+$('choose-pdf').addEventListener('click', () => $('proposal-pdf').click());
+$('proposal-pdf').addEventListener('change', async () => {
+  const input = $('proposal-pdf');
+  const file = input.files?.[0];
+  if (!file) return;
+  const status = $('proposal-pdf-status');
+  const proposal = $('proposal');
+  if ((!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') || file.size > 5 * 1024 * 1024) {
+    status.textContent = 'Choose a PDF file smaller than 5 MB.';
+    input.value = '';
+    return;
+  }
+  pdfImporting = true;
+  $('choose-pdf').disabled = true;
+  $('save').disabled = true;
+  status.textContent = `Reading ${file.name}…`;
+  try {
+    browserToken ??= (await api('/api/session')).token;
+    const response = await fetch('/api/proposals/extract-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/pdf', 'X-Browser-Token': browserToken },
+      body: file,
+      signal: AbortSignal.timeout(30000),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error ?? 'Could not read the PDF.');
+    const combined = proposal.value.trim() ? `${proposal.value.trimEnd()}\n\n${result.text}` : result.text;
+    if (combined.length > proposal.maxLength) throw new Error('The imported text plus your existing proposal exceeds 20,000 characters. Shorten the current text and try again.');
+    proposal.value = combined;
+    proposal.dispatchEvent(new Event('input', { bubbles: true }));
+    proposal.focus();
+    status.textContent = `Imported selectable text from ${result.pages} page${result.pages === 1 ? '' : 's'}. Review it before saving; the PDF file itself was not stored.`;
+  } catch (error) {
+    status.textContent = error.name === 'TimeoutError' ? 'PDF reading timed out. Try a smaller PDF or paste its text.' : error.message;
+  } finally {
+    pdfImporting = false;
+    $('choose-pdf').disabled = false;
+    $('save').disabled = false;
+    input.value = '';
+  }
+});
 $('request-form').addEventListener('submit', async (event) => {
   event.preventDefault(); showError('');
+  if (pdfImporting) return;
   let firstInvalid;
   for (const id of ['proposal', 'goal']) {
     const input = $(id), invalid = !input.value.trim();
@@ -400,7 +443,7 @@ for (const id of ['proposal', 'goal']) $(id).addEventListener('input', () => {
   if ($(id).value.trim()) { $(id).setAttribute('aria-invalid', 'false'); $(`${id}-error`).hidden = true; }
 });
 window.addEventListener('beforeunload', (event) => {
-  if (answersDirty || packageEdits.size || (!$('intake').hidden && ($('proposal').value || $('goal').value) && !$('save').disabled)) { event.preventDefault(); event.returnValue = ''; }
+  if (pdfImporting || answersDirty || packageEdits.size || (!$('intake').hidden && ($('proposal').value || $('goal').value) && !$('save').disabled)) { event.preventDefault(); event.returnValue = ''; }
 });
 if (location.pathname.startsWith('/requests/')) {
   setupModelPanel();
