@@ -81,6 +81,11 @@ test('HTTP contracts, adapter read-before-ack and server restart', async (t) => 
   let id;
   await t.test('Server binds exclusively to IPv4 loopback', () => assert.equal(app.server.address().address, '127.0.0.1'));
   await t.test('Save, repeated retrieval and waiting state; no browser ACK capability', async () => {
+    for (const path of ['/putrapitch-logo.svg', '/putrapitch-wordmark.svg']) {
+      const asset = await call(path); assert.equal(asset.status, 200);
+      assert.match(asset.headers.get('content-type'), /image\/svg\+xml/);
+      assert.match(await asset.text(), /PUTRApitch/);
+    }
     const response = await post(input); assert.equal(response.status, 201);
     const record = await response.json(); id = record.id; assert.equal(record.status, 'waiting');
     const saved = await (await call(`/api/requests/${id}`)).json(); assert.deepEqual(saved, record);

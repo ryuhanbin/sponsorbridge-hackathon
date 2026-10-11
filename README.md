@@ -1,4 +1,8 @@
-# SponsorBridge
+# PUTRApitch
+
+![PUTRApitch logo](public/putrapitch-wordmark.svg)
+
+PUTRApitch is the new project name. The existing repository URL, folder names, legacy environment variable (`SPONSORBRIDGE_PORT`) and historical evidence filenames remain unchanged for compatibility. The original P-and-pitch-arrow logo is a project identity, not an official university logo or endorsement.
 
 **Helping UPM student organisers turn an event idea into a clear, reviewable sponsorship request.** Built with WorkBuddy; presented by Afiq.
 
@@ -6,7 +10,7 @@ Public source: https://github.com/ryuhanbin/sponsorbridge-hackathon
 
 This repository contains a **local prototype**, not a hosted web application or an official UPM service. No sponsorship has been secured through the prototype and no businesses have been contacted.
 
-![SponsorBridge request workspace](evidence/SponsorBridge-ui-new-request.png)
+![PUTRApitch current request workspace](evidence/PUTRApitch-intake.png)
 
 ## Problem and implemented features
 
@@ -125,7 +129,11 @@ Screenshots capture the earlier demonstration; their displayed review counts are
 
 The separate **Campus Sustainability Fair** test request produced two in-kind card drafts: reusable bottles and repair-workshop materials. Quantities, date, venue, approvals, and tax status remain unconfirmed. The only draft benefits come from an explicit fictional organiser answer: a logo on the event page and a verbal thank-you during opening remarks. The cards are awaiting content review.
 
-![CodeBuddy-produced fictional sponsorship cards](evidence/SponsorBridge-live-CodeBuddy-cards.png)
+![PUTRApitch saved fictional sponsorship cards](evidence/PUTRApitch-packages.png)
+
+## Fictional small-business preview
+
+Open `/marketplace` on the local server to see two explicitly fictional event listings. A small business can select an in-kind offer and interests, then see fixed-rule fit reasons and outstanding questions. This preview does not publish private requests or make an AI call. The **Copy WorkBuddy matching brief** action prepares a manual task for WorkBuddy to compare both listings against the selected business preferences; it does not claim that WorkBuddy has already produced a match. No listing is an approved event, accepted offer, or sponsor commitment.
 
 ## Tests and evidence
 
@@ -138,11 +146,13 @@ node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mj
 - **11 October 2026:** all **25 Node checks** passed, including isolated fake-model preparation and card runs, stream parsing, source attribution, key persistence and removal, key non-disclosure, and formatting repair.
 - **11 October 2026:** a live CodeBuddy CLI account call generated the fictional fair drafts. The first responses needed deterministic formatting repair and were recovered from local CLI traces, validated against the original proposal and answer, then saved. The updated one-click streamed path has automated tests but has not had a fresh live end-to-end run after this final repair.
 - **10 October 2026:** earlier WorkBuddy reports recorded **63 Chrome UI checks**, including responsive widths and isolated in-memory mutation checks. These are historical results, **not freshly rerun browser checks**; mocked UI actions are not live WorkBuddy execution.
+- **11 October 2026 UI rebrand:** the approved light/monochrome interface was renamed PUTRApitch across the local app and deck, with an original project logo. The reference-restyle check passed 134 browser assertions, followed by 138 rebrand browser assertions across eight widths (320–1440 px), including in-memory edit/review tests; 29 live data/key files were unchanged. These are UI checks, not another live sponsorship-model run.
+- Current PUTRApitch screenshots and the legacy historical screenshots are in `evidence/`. `public/putrapitch-logo.svg` and `public/putrapitch-wordmark.svg` provide scalable logo assets. The six-slide local deck is delivered as `slides/PUTRApitch-pitch.pptx`; the legacy deck path is retained.
 - `evidence/` contains the existing request, overview, and package screenshots. Browser verification tooling is separate from the runtime and is not needed to start the app.
 
 ## Current limitations and next steps
 
-Working scope is **preparation, clarification answers, editable packages, and content review**. Business matching, personalised sponsor pitches, and complete campaign export remain **planned**, not implemented.
+Working scope is **preparation, clarification answers, editable packages, content review, and a fictional local business-side preview with fixed-rule fit explanations**. A live WorkBuddy business-matching result, publication of reviewed cards, personalised sponsor pitches, and complete campaign export remain **planned**, not implemented.
 
 The prototype is local, single-user and single-mutation-process. It is not multi-user production infrastructure. The optional website dispatch targets CodeBuddy CLI, not the WorkBuddy desktop conversation. There is no outreach, payment processing, hosted deployment, or live university integration. Exact source quotes support traceability but do not prove that an edited claim is semantically justified. Student review remains necessary. No student usability study, full screen-reader audit, or physical-device assurance is claimed.
 

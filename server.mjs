@@ -64,6 +64,12 @@ export async function createApplication({ directory = DATA_DIRECTORY, agentKey, 
     '/': ['index.html', 'text/html; charset=utf-8'],
     '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
     '/styles.css': ['styles.css', 'text/css; charset=utf-8'],
+    '/marketplace': ['marketplace.html', 'text/html; charset=utf-8'],
+    '/marketplace.html': ['marketplace.html', 'text/html; charset=utf-8'],
+    '/marketplace.js': ['marketplace.js', 'text/javascript; charset=utf-8'],
+    '/marketplace.css': ['marketplace.css', 'text/css; charset=utf-8'],
+    '/putrapitch-logo.svg': ['putrapitch-logo.svg', 'image/svg+xml'],
+    '/putrapitch-wordmark.svg': ['putrapitch-wordmark.svg', 'image/svg+xml'],
   };
   const server = http.createServer(async (req, res) => {
     const headers = {
@@ -159,11 +165,11 @@ export async function startApplication(options = {}) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const app = await startApplication();
-    console.log(`SponsorBridge local prototype: http://127.0.0.1:${app.server.address().port}`);
+    console.log(`PUTRApitch local prototype: http://127.0.0.1:${app.server.address().port}`);
     console.log(`Local data: ${DATA_DIRECTORY}`);
     console.log('Saving never launches WorkBuddy. Start it manually with the request instruction.');
     for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => {
       app.server.close(() => process.exit(0)); app.server.closeIdleConnections();
     });
-  } catch (error) { console.error(`Cannot start SponsorBridge: ${error.message}`); process.exitCode = 1; }
+  } catch (error) { console.error(`Cannot start PUTRApitch: ${error.message}`); process.exitCode = 1; }
 }

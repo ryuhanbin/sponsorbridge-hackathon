@@ -26,7 +26,7 @@ export async function runAdapter(args, { baseUrl = 'http://127.0.0.1:4317', keyF
       method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Agent-Key': key },
       body: JSON.stringify(body), signal: AbortSignal.timeout(10000), redirect: 'error',
     });
-  } catch { throw new Error('Cannot reach SponsorBridge. Start the server at http://127.0.0.1:4317.'); }
+  } catch { throw new Error('Cannot reach PUTRApitch. Start the server at http://127.0.0.1:4317.'); }
   const result = await response.json();
   if (!response.ok) throw new Error(result.error ?? `Adapter request failed (${response.status}).`);
   return result;
