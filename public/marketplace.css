@@ -46,6 +46,15 @@ legend span { color: var(--muted); font-weight: 400; }
 .preview-explainer strong { color: var(--text); }
 .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin: 1px 0 19px; }
 .section-heading h2 { margin-top: 4px; }
+.published-section { margin: 4px 0 35px; }
+.subsection-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 20px 0 8px; }
+.subsection-heading h3 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -.3px; }
+.published-actions { display: flex; align-items: center; gap: 12px; }
+.published-intro, .published-status { margin: 0 0 13px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.published-status { padding: 9px 0; }
+.sample-heading { margin-top: 30px; }
+.text-button { min-height: 0; padding: 3px 0; border: 0; background: transparent; color: var(--muted); font-size: 11px; font-weight: 500; text-decoration: underline; }
+.text-button:hover { background: transparent; color: var(--text); }
 .count-badge, .draft-badge { padding: 4px 8px; border: 1px solid var(--border); border-radius: 20px; color: var(--muted); font-size: 9px; letter-spacing: .65px; white-space: nowrap; }
 .result-summary { min-height: 24px; margin: 0 0 13px; color: var(--muted); font-size: 12px; }
 .card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
@@ -59,6 +68,7 @@ legend span { color: var(--muted); font-weight: 400; }
 .fit-title { display: block; margin: 9px 0 7px; font-size: 14px; font-weight: 650; }
 .fit-reasons { margin: 0; padding-left: 17px; color: #5c5c5c; font-size: 11px; line-height: 1.6; }
 .fit-reasons li + li { margin-top: 3px; }
+.published-fit-copy { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .card-section { min-height: 120px; padding: 19px 23px 15px; border-bottom: 1px solid var(--border); }
 .card-section p { margin: 9px 0 0; font-size: 12px; line-height: 1.7; }
 .card-unknowns { flex: 1; min-height: 135px; }

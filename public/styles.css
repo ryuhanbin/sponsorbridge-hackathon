@@ -197,6 +197,8 @@ select { background: var(--surface); color: var(--text); border: 1px solid #c5c5
 .package-status { display: inline-block; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; font-size: 11px; padding: 4px 8px; margin: 0; }
 .package-status.is-reviewed { color: var(--text); border-color: var(--muted); }
 .package-status.is-reviewed::before { content: "✓ "; }
+.package-status.is-published { border-color: #60804c; color: #406b2d; }
+.package-card:last-child:not(:first-child) .package-status.is-published { color: #d9edb7; border-color: #a5c77c; }
 .package-card-body { padding: 0 26px; }
 .package-card h3 { margin: 0 0 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-size: 10px; font-weight: 600; }
 .package-card p { overflow-wrap: anywhere; }
@@ -224,6 +226,18 @@ select { background: var(--surface); color: var(--text); border: 1px solid #c5c5
 .package-card textarea { color: var(--text); background: var(--surface); border-color: var(--muted); }
 .package-card .secondary-button { color: var(--text); border-color: var(--muted); }
 .package-card .secondary-button:hover { background: var(--surface); opacity: .8; }
+.marketplace-intro { margin: 16px 0; padding: 14px 16px; border: 1px solid #b8c5ae; border-radius: 8px; background: #f5f8f1; color: #34402f; font-size: 12px; line-height: 1.7; }
+.marketplace-intro p { margin: 0 0 6px; }
+.marketplace-intro a { color: #31591d; font-weight: 700; text-underline-offset: 3px; }
+.publication-actions { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+.publication-actions h3 { margin-bottom: 8px; }
+.publication-actions .hint { margin: 0 0 12px; }
+.publication-confirm { display: flex; gap: 9px; align-items: flex-start; margin-bottom: 12px; font-size: 11px; line-height: 1.5; color: var(--text); cursor: pointer; }
+.publication-confirm input { flex: none; margin: 2px 0 0; accent-color: #527b39; }
+.publication-actions button { width: 100%; font-size: 12px; }
+.publication-actions .publication-button { color: #172611; background: #d2eab5; border-color: #b1d08d; }
+.publication-actions .publication-button:hover:not(:disabled) { background: #c1e097; }
+.publication-actions button:disabled { opacity: .5; cursor: not-allowed; }
 .package-card:last-child:not(:first-child) :focus-visible, .model-panel :focus-visible { outline-color: #adc4f5; }
 #package-list.is-stale .package-status { border-style: dashed; }
 /* Shared row tracks keep comparison headings, contributions and actions aligned. */

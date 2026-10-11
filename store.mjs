@@ -1,6 +1,6 @@
 import { mkdir, open, readFile, link, unlink, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { validatePlan, validateResult } from './workflow.mjs';
 import { validateAnswers, validateContinuation, validatePackage, revision } from './packages.mjs';
 
@@ -41,6 +41,7 @@ export async function publishOnce(file, value) {
 // competing publications. Running two new mutation servers is unsupported.
 const activeMutations = new Set();
 const WORKFLOW_ACTORS = ['WorkBuddy via local adapter', 'CodeBuddy CLI via API key'];
+const cardHash = (content) => createHash('sha256').update(JSON.stringify(content)).digest('hex');
 export function createStore(directory) {
   const file = (id, suffix) => join(directory, `${validId(id)}.${suffix}.json`);
   async function load(path, optional = false) {
@@ -117,14 +118,21 @@ export function createStore(directory) {
       const continuationHistory = await history(id, 'continuation');
       const continuation = continuationHistory.at(-1) ?? null;
       const packageHistory = await history(id, 'packages');
+      const publicationHistory = await history(id, 'publication');
       // Histories are immutable, but their heads can change between reads.
       // Retry before validation if any head advanced; never report a mixed snapshot.
-      const heads = await Promise.all(['answers', 'continuation', 'packages'].map((kind) => history(id, kind)));
-      if (heads.some((entries, index) => entries.length !== [answerHistory, continuationHistory, packageHistory][index].length)) {
+      const heads = await Promise.all(['answers', 'continuation', 'packages', 'publication'].map((kind) => history(id, kind)));
+      if (heads.some((entries, index) => entries.length !== [answerHistory, continuationHistory, packageHistory, publicationHistory][index].length)) {
         if (snapshotAttempt >= 4) throw new AppError(409, 'Saved state changed during read. Retry to obtain the latest snapshot.');
         return this.get(id, snapshotAttempt + 1);
       }
       const packageState = packageHistory.at(-1) ?? null;
+      for (const item of publicationHistory) {
+        if (!/^pkg_[a-z0-9_-]{1,40}$/.test(item.packageId) || typeof item.published !== 'boolean' ||
+            (item.published && (!Number.isFinite(Date.parse(item.publishedAt)) || !/^[a-f0-9]{64}$/.test(item.contentHash) || !Number.isFinite(Date.parse(item.reviewedAt))))) {
+          throw new AppError(500, 'Stored publication history is invalid; no records overwritten.');
+        }
+      }
       const context = { ...record, preparation, answerHistory, answers, continuation };
       try {
         for (const a of answerHistory) {
@@ -145,9 +153,18 @@ export function createStore(directory) {
       if (packageState) progress.push({ action: `Package edit/review revision ${packageState.revision} saved`, recordedAt: packageState.recordedAt });
       const stale = Boolean(continuation && continuation.content.answerRevision !== answers?.revision);
       const packages = packageState && packageState.continuationRevision === continuation?.revision ? packageState.packages : (continuation?.content.packages ?? []).map((content) => ({ content, review: null }));
+      const latestPublication = new Map();
+      for (const item of publicationHistory) latestPublication.set(item.packageId, item);
       return { ...record, status: answers && (!continuation || stale) ? 'answers_saved' : continuation ? 'packages_drafted' : preparation ? 'prepared' : plan ? 'planned' : acknowledgement ? 'acknowledged' : 'waiting', acknowledgement, plan, preparation, progress,
         answerHistory, answers, answerRevision: answers?.revision ?? 0, continuationHistory, continuation, continuationRevision: continuation?.revision ?? 0, continuationStale: stale,
-        packageHistory, packageRevision: packageState?.revision ?? 0, packages: packages.map((p) => ({ ...p, reviewCurrent: Boolean(p.review && !stale) })) };
+        packageHistory, packageRevision: packageState?.revision ?? 0, publicationRevision: publicationHistory.length,
+        packages: packages.map((p) => {
+          const record = latestPublication.get(p.content.id);
+          const published = Boolean(record?.published && p.review && !stale &&
+            record.answerRevision === answers?.revision && record.continuationRevision === continuation?.revision &&
+            record.reviewedAt === p.review.reviewedAt && record.contentHash === cardHash(p.content));
+          return { ...p, reviewCurrent: Boolean(p.review && !stale), publication: { published, publishedAt: published ? record.publishedAt : null } };
+        }) };
     },
     async saveAnswers(id, body) {
       return locked(id, async () => {
@@ -192,6 +209,56 @@ export function createStore(directory) {
       await append(id, 'packages', body.expectedRevision, { packages, answerRevision: request.answerRevision, continuationRevision: request.continuationRevision, action: reviewing ? 'review' : 'edit', packageId: body.packageId, actor: 'Student via browser' });
       return this.get(id);
       });
+    },
+    async setPublication(id, body) {
+      return locked(id, async () => {
+        if (!body || typeof body !== 'object' || Array.isArray(body) ||
+            Object.keys(body).some((key) => !['packageId', 'published', 'expectedRevision', 'continuationRevision'].includes(key)) ||
+            !['packageId', 'published', 'expectedRevision', 'continuationRevision'].every((key) => key in body) ||
+            typeof body.published !== 'boolean') throw new AppError(400, 'Invalid publication fields.');
+        revision(body.expectedRevision); revision(body.continuationRevision);
+        const request = await this.get(id);
+        if (request.continuationStale || body.expectedRevision !== request.packageRevision ||
+            body.continuationRevision !== request.continuationRevision) throw new AppError(409, 'Saved cards changed. Reload before changing publication.');
+        const card = request.packages.find((item) => item.content.id === body.packageId);
+        if (!card) throw new AppError(400, 'Unknown package ID.');
+        if (body.published && !card.reviewCurrent) throw new AppError(409, 'Review this current card before publishing it.');
+        if (card.publication.published === body.published) return request;
+        await append(id, 'publication', request.publicationRevision, {
+          packageId: body.packageId, published: body.published,
+          publishedAt: body.published ? new Date().toISOString() : null,
+          reviewedAt: body.published ? card.review.reviewedAt : null,
+          contentHash: body.published ? cardHash(card.content) : null,
+          answerRevision: request.answerRevision, continuationRevision: request.continuationRevision,
+          actor: 'Student publication opt-in via browser',
+        });
+        return this.get(id);
+      });
+    },
+    async listPublicListings() {
+      const names = await readdir(directory);
+      const ids = names.filter((name) => name.endsWith('.request.json'))
+        .map((name) => name.slice(0, -'.request.json'.length)).filter((id) => ID_PATTERN.test(id));
+      const listings = [];
+      for (const id of ids) {
+        const request = await this.get(id);
+        const eventTitle = request.continuation?.content.event.facts.find((fact) => fact.field === 'eventName')?.value || 'Student event';
+        for (const card of request.packages) {
+          if (!card.publication.published) continue;
+          const content = card.content;
+          listings.push({
+            id: createHash('sha256').update(`${id}:${content.id}`).digest('hex').slice(0, 24), packageId: content.id,
+            eventTitle, summary: content.title, contributionType: content.contributionType,
+            supportRequested: content.items.map((item) => item.quantity ? `${item.description} — ${item.quantity}` : item.description),
+            amount: content.contributionType === 'cash' ? content.amount.value : '',
+            currency: content.contributionType === 'cash' ? content.currency.value : '',
+            draftReturn: content.benefits.map((benefit) => benefit.text),
+            unknowns: [...content.outstanding], publishedAt: card.publication.publishedAt,
+            sourceLabel: 'Organiser-reviewed draft; publication opt-in',
+          });
+        }
+      }
+      return listings;
     },
     async saveWorkflow(id, kind, content, actor = WORKFLOW_ACTORS[0]) {
       if (!WORKFLOW_ACTORS.includes(actor)) throw new AppError(400, 'Invalid workflow actor.');

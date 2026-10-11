@@ -24,7 +24,7 @@ function instruction(id) {
 function render(request) {
   if (currentRequest?.id === request.id) {
     const ranks = { waiting: 0, acknowledged: 1, planned: 2, prepared: 3, answers_saved: 4, packages_drafted: 5 };
-    if (['answerRevision', 'continuationRevision', 'packageRevision'].some((key) => request[key] < currentRequest[key]) ||
+    if (['answerRevision', 'continuationRevision', 'packageRevision', 'publicationRevision'].some((key) => (request[key] ?? 0) < (currentRequest[key] ?? 0)) ||
         (request.answerRevision === currentRequest.answerRevision && request.continuationRevision === currentRequest.continuationRevision && request.packageRevision === currentRequest.packageRevision && ranks[request.status] < ranks[currentRequest.status])) return;
   } else { packageEdits.clear(); }
   currentRequest = request;
@@ -204,7 +204,7 @@ function renderPackages(request) {
   $('package-sync').textContent = request.continuationStale ? 'Answers changed · refresh drafts with AI or WorkBuddy' : 'Cards update automatically from saved results';
   $('package-sync').classList.toggle('is-stale', request.continuationStale);
   $('package-list').classList.toggle('is-stale', request.continuationStale);
-  const key = `${request.id}:${request.continuationRevision}:${request.packageRevision}:${request.answerRevision}`;
+  const key = `${request.id}:${request.continuationRevision}:${request.packageRevision}:${request.publicationRevision ?? 0}:${request.answerRevision}`;
   if (packageRenderedKey === key) return;
   if (packageRenderedKey) $('package-announcement').textContent = request.continuationStale ? 'Answers changed. These package drafts need a new AI or WorkBuddy result before review.' : `${request.packages.length} package cards updated from saved results.`;
   packageRenderedKey = key; $('package-list').replaceChildren(); $('resolutions').replaceChildren();
@@ -220,7 +220,8 @@ function renderPackages(request) {
     topline.append(node('span', kindNames[content.contributionType], 'package-kind'), node('span', 'Draft', 'package-draft'));
     const title = node('h2', content.title); title.id = `title-${content.id}`;
     card.setAttribute('aria-labelledby', title.id);
-    heading.append(topline, title, node('p', request.continuationStale ? 'Needs refresh' : pkg.reviewCurrent ? 'Content reviewed' : 'Awaiting content review', `package-status${!request.continuationStale && pkg.reviewCurrent ? ' is-reviewed' : ''}`));
+    const published = pkg.publication?.published === true;
+    heading.append(topline, title, node('p', request.continuationStale ? 'Needs refresh' : published ? 'Published in business marketplace' : pkg.reviewCurrent ? 'Content reviewed · private' : 'Awaiting content review · private', `package-status${!request.continuationStale && pkg.reviewCurrent ? ' is-reviewed' : ''}${published ? ' is-published' : ''}`));
     card.append(heading);
     const body = node('div', '', 'package-card-body');
     const items = node('div', '', 'package-items');
@@ -253,7 +254,38 @@ function renderPackages(request) {
     const actions = node('footer', '', 'package-actions'); actions.append(node('p', 'Review is about draft content. Sponsor acceptance and event permissions are separate.', 'hint'), review);
     edit.addEventListener('click',async()=>{showError('');try{const draft=packageEdits.get(pkg.content.id);const r=await browserPost('package-edit',{expectedRevision:draft?.expectedRevision ?? request.packageRevision,continuationRevision:draft?.continuationRevision ?? request.continuationRevision,packageId:pkg.content.id,content:JSON.parse(input.value)});packageEdits.delete(pkg.content.id);packageRenderedKey='';render(r);$('package-feedback').textContent='Edit saved. Prior review of this package invalidated. Other unsaved editors retained.';}catch(e){showError(e.message);}});
     review.addEventListener('click',async()=>{showError('');try{if(packageEdits.has(pkg.content.id))throw Error('Save this package edit before reviewing.');const r=await browserPost('package-review',{expectedRevision:request.packageRevision,continuationRevision:request.continuationRevision,packageId:pkg.content.id});packageRenderedKey='';render(r);$('package-feedback').textContent='Content reviewed only — not university approval or sponsor acceptance.';}catch(e){showError(e.message);}});
-    editor.append(label,input,edit); actions.append(editor); card.append(actions);$('package-list').append(card);
+    editor.append(label,input,edit); actions.append(editor);
+    const sharing = node('div', '', 'publication-actions');
+    sharing.append(node('h3', 'Business marketplace'));
+    if (published) {
+      sharing.append(node('p', 'This reviewed draft is visible to anyone who can access this app. It is not an approval or sponsor agreement.', 'hint'));
+      const unpublish = node('button', 'Remove from marketplace', 'secondary-button'); unpublish.type = 'button';
+      unpublish.addEventListener('click', async () => {
+        showError(''); unpublish.disabled = true;
+        try {
+          const r = await browserPost('publication', { packageId: content.id, published: false, expectedRevision: currentRequest.packageRevision, continuationRevision: currentRequest.continuationRevision });
+          packageRenderedKey = ''; render(r); $('package-feedback').textContent = `${content.title} removed from the business marketplace.`;
+        } catch (error) { showError(error.message); unpublish.disabled = false; }
+      });
+      sharing.append(unpublish);
+    } else if (pkg.reviewCurrent && !request.continuationStale) {
+      const confirmLabel = node('label', '', 'publication-confirm');
+      const confirmInput = document.createElement('input'); confirmInput.type = 'checkbox';
+      confirmLabel.append(confirmInput, node('span', 'I choose to show this event title and card details to anyone who can access the marketplace. This is still a draft.'));
+      const publish = node('button', 'Publish to marketplace', 'publication-button'); publish.type = 'button'; publish.disabled = true;
+      confirmInput.addEventListener('change', () => { publish.disabled = !confirmInput.checked; });
+      publish.addEventListener('click', async () => {
+        showError('');
+        if (!confirmInput.checked || packageEdits.has(content.id)) { showError('Confirm publication and save any package edits first.'); return; }
+        publish.disabled = true;
+        try {
+          const r = await browserPost('publication', { packageId: content.id, published: true, expectedRevision: currentRequest.packageRevision, continuationRevision: currentRequest.continuationRevision });
+          packageRenderedKey = ''; render(r); $('package-feedback').textContent = `${content.title} published to the business marketplace as a draft.`;
+        } catch (error) { showError(error.message); publish.disabled = false; }
+      });
+      sharing.append(node('p', 'Private until you choose to publish.', 'hint'), confirmLabel, publish);
+    } else sharing.append(node('p', 'Private. Mark this card’s content reviewed before publishing.', 'hint'));
+    actions.append(sharing); card.append(actions); $('package-list').append(card);
   }
 }
 $('answers-form').addEventListener('submit', async (e) => {

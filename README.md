@@ -131,19 +131,21 @@ The separate **Campus Sustainability Fair** test request produced two in-kind ca
 
 ![PUTRApitch saved fictional sponsorship cards](evidence/PUTRApitch-packages.png)
 
-## Fictional small-business preview
+## Small-business marketplace preview
 
-Open `/marketplace` on the local server to see two explicitly fictional event listings. A small business can select an in-kind offer and interests, then see fixed-rule fit reasons and outstanding questions. This preview does not publish private requests or make an AI call. The **Copy WorkBuddy matching brief** action prepares a manual task for WorkBuddy to compare both listings against the selected business preferences; it does not claim that WorkBuddy has already produced a match. No listing is an approved event, accepted offer, or sponsor commitment.
+Open `/marketplace` on the local server to see organiser-published sponsorship cards and two explicitly fictional sample listings. Each card is private by default. After reviewing its content, the organiser must acknowledge its visibility and explicitly publish it; they can remove it later. The public listing includes only a limited projection of the reviewed card, not the private proposal, goal, answers, activity, or evidence. A changed card or stale continuation disappears from the marketplace until reviewed and published again.
+
+A small business can select an in-kind offer and interests. The fictional sample listings show fixed-rule fit reasons; published cards are passed through in their reviewed wording without an on-page AI score. **Copy WorkBuddy matching brief** prepares a manual WorkBuddy task to assess the published cards, or the fictional samples if none are published. A WorkBuddy result is produced only after that brief is run in WorkBuddy. No listing is an approved event, accepted offer, or sponsor commitment.
 
 ## Tests and evidence
 
 Run the existing Node checks from the repository root:
 
 ```sh
-node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mjs test/model-bridge.test.mjs
+node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mjs test/model-bridge.test.mjs test/publication.test.mjs
 ```
 
-- **11 October 2026:** all **25 Node checks** passed, including isolated fake-model preparation and card runs, stream parsing, source attribution, key persistence and removal, key non-disclosure, and formatting repair.
+- **11 October 2026:** all **27 Node checks** passed, including isolated fake-model preparation and card runs, stream parsing, source attribution, key persistence and removal, formatting repair, and publication privacy/staleness checks.
 - **11 October 2026:** a live CodeBuddy CLI account call generated the fictional fair drafts. The first responses needed deterministic formatting repair and were recovered from local CLI traces, validated against the original proposal and answer, then saved. The updated one-click streamed path has automated tests but has not had a fresh live end-to-end run after this final repair.
 - **10 October 2026:** earlier WorkBuddy reports recorded **63 Chrome UI checks**, including responsive widths and isolated in-memory mutation checks. These are historical results, **not freshly rerun browser checks**; mocked UI actions are not live WorkBuddy execution.
 - **11 October 2026 UI rebrand:** the approved light/monochrome interface was renamed PUTRApitch across the local app and deck, with an original project logo. The reference-restyle check passed 134 browser assertions, followed by 138 rebrand browser assertions across eight widths (320–1440 px), including in-memory edit/review tests; 29 live data/key files were unchanged. These are UI checks, not another live sponsorship-model run.
@@ -152,7 +154,7 @@ node --test test/stage1.test.mjs test/preparation.test.mjs test/packages.test.mj
 
 ## Current limitations and next steps
 
-Working scope is **preparation, clarification answers, editable packages, content review, and a fictional local business-side preview with fixed-rule fit explanations**. A live WorkBuddy business-matching result, publication of reviewed cards, personalised sponsor pitches, and complete campaign export remain **planned**, not implemented.
+Working scope is **preparation, clarification answers, editable packages, content review, explicit publication of reviewed cards, and a local business-side preview with fixed-rule explanations for fictional examples**. A live WorkBuddy business-matching result, personalised sponsor pitches, and complete campaign export remain **planned**, not implemented.
 
 The prototype is local, single-user and single-mutation-process. It is not multi-user production infrastructure. The optional website dispatch targets CodeBuddy CLI, not the WorkBuddy desktop conversation. There is no outreach, payment processing, hosted deployment, or live university integration. Exact source quotes support traceability but do not prove that an edited claim is semantically justified. Student review remains necessary. No student usability study, full screen-reader audit, or physical-device assurance is claimed.
 

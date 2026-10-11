@@ -100,6 +100,9 @@ export async function createApplication({ directory = DATA_DIRECTORY, agentKey, 
       if (req.method === 'GET' && path === '/api/session') {
         json(200, { token: browserToken }); return;
       }
+      if (req.method === 'GET' && path === '/api/marketplace/listings') {
+        json(200, { listings: await store.listPublicListings() }); return;
+      }
       if (req.method === 'GET' && path === '/api/model/status') {
         json(200, modelBridge.status(validId(url.searchParams.get('id')))); return;
       }
@@ -118,11 +121,11 @@ export async function createApplication({ directory = DATA_DIRECTORY, agentKey, 
         if (!sameSecret(req.headers['x-browser-token'], browserToken)) throw new AppError(403, 'Session expired. Reload and try again.');
         json(201, await store.create(await readBody(req))); return;
       }
-      const mutation = path.match(/^\/api\/requests\/([^/]+)\/(answers|package-edit|package-review)$/);
+      const mutation = path.match(/^\/api\/requests\/([^/]+)\/(answers|package-edit|package-review|publication)$/);
       if (req.method === 'POST' && mutation) {
         if (!sameSecret(req.headers['x-browser-token'], browserToken)) throw new AppError(403, 'Browser session required. Reload before saving.');
         const id = validId(mutation[1]); const body = await readBody(req);
-        json(200, mutation[2] === 'answers' ? await store.saveAnswers(id, body) : await store.updatePackage(id, body, mutation[2] === 'package-review')); return;
+        json(200, mutation[2] === 'answers' ? await store.saveAnswers(id, body) : mutation[2] === 'publication' ? await store.setPublication(id, body) : await store.updatePackage(id, body, mutation[2] === 'package-review')); return;
       }
       if (req.method === 'GET' && path.startsWith('/api/requests/')) {
         json(200, await store.get(path.slice('/api/requests/'.length))); return;
