@@ -8,6 +8,8 @@ PUTRApitch is the new project name. The existing repository URL, folder names, l
 
 Public source: https://github.com/ryuhanbin/sponsorbridge-hackathon
 
+Public fictional demo: https://putrapitch-afiiq-demo.spryspoon8.chatgpt.site — overview and small-business marketplace preview only. The full proposal/PDF/AI workflow runs locally and is not hosted there.
+
 This repository contains a **local prototype**, not a hosted web application or an official UPM service. No sponsorship has been secured through the prototype and no businesses have been contacted.
 
 ![PUTRApitch current request workspace](evidence/PUTRApitch-intake.png)
